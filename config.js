@@ -1,10 +1,10 @@
-// Paste the values from Firebase console → Project settings → Your apps → Web app → "SDK setup and configuration".
-// These values are not secret: the security rules in firestore.rules decide who may write scores.
+// Firebase settings for project "BADMINTON -TENVOX" (badminton--tenvox).
+// These values are not secret: firestore.rules decides who may write scores.
 export const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT_ID.appspot.com",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId: "PASTE_APP_ID"
+  apiKey: "AIzaSyBtWPSEMII6e9lMvCRsb3nQTQyLfcLv2FQ",
+  authDomain: "badminton--tenvox.firebaseapp.com",
+  projectId: "badminton--tenvox",
+  storageBucket: "badminton--tenvox.firebasestorage.app",
+  messagingSenderId: "842081204636",
+  appId: "1:842081204636:web:ce52c8d724917a0635f059"
 };

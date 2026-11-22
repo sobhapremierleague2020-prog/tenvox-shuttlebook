@@ -7,8 +7,7 @@ service cloud.firestore {
     function isScorer() {
       return request.auth != null
         && request.auth.token.email in [
-          'scorer1@example.com',
-          'scorer2@example.com'
+          'moorkkannoor@gmail.com'
         ];
     }
 
