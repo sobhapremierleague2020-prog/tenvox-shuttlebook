@@ -108,6 +108,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 
 /* ===== live view ===== */
+.mv{font-size:12px;font-weight:800;white-space:nowrap}.mv.up{color:#2f9e4f}.mv.dn{color:var(--red)}.mv.eq{color:var(--mute)}
+
 .ms-share{background:#1f6f43!important;color:#fff!important}.ms-share2{background:#24352e!important;color:#fff!important}
 #shareOv{position:fixed;inset:0;z-index:20}.sh-bg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
 .sh-panel{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--panel);color:var(--ink);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:10px;max-height:92dvh;overflow:auto}
@@ -427,19 +429,32 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
  <div class="mbar">${w&&m.status==='live'?`<button class="btn-gold mfinish" id="finish2">✔ Confirm · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button><button class="mundo" id="undo2">↶</button>`:
   order.map((s,i)=>{const T=s==='A'?A:B,sc=s==='A'?m.sA:m.sB;return `${i===1?`<div class="mmid"><button class="mundo" id="undo3" ${(m.hist||[]).length?'':'disabled'} aria-label="Undo last point">↶</button><button class="mundo" id="swap3" aria-label="Change court">⇆</button></div>`:''}<div class="mteam"><button class="mplus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'?'disabled':''} aria-label="Point to ${esc(T.n)}"><span>${esc(short(T.n.split(' ')[0]))}</span><b>${sc}</b><i>+1</i></button><button class="mminus" data-minus="${s}" ${(m.hist||[]).length?'':'disabled'} aria-label="Remove last point of ${esc(T.n)}">−</button></div>`}).join('')}</div>`}
 /* ---------- watch + results ---------- */
-function encounters(){const map={};
- for(const m of matches.filter(m=>m.status==='done'||m.status==='live')){const k=encKey(m);(map[k]=map[k]||{type:m.type,a:[m.teamA,m.teamB].sort()[0],b:[m.teamA,m.teamB].sort()[1],ties:[],t:0}).ties.push(m);map[k].t=Math.max(map[k].t,m.updatedAt||0)}
- return Object.values(map).sort((x,y)=>y.t-x.t)}
-function standings(){const st={};for(const t of TEAMS)st[t.k]={P:0,W:0,L:0,TW:0,TL:0,PTS:0,R:0};
- for(const e of encounters()){const done=e.ties.filter(m=>m.status==='done'&&m.winner);if(!done.length)continue;
-  const pts={[e.a]:0,[e.b]:0};
+function encounters(){const groups={},out=[];
+ const list=matches.filter(m=>m.status==='done'||m.status==='live').slice().sort((x,y)=>(x.createdAt||x.updatedAt||0)-(y.createdAt||y.updatedAt||0));
+ for(const m of list){const k=encKey(m);const gs=groups[k]=groups[k]||[];let g=gs[gs.length-1];
+  if(!g||g.ties.some(x=>x.tie===m.tie)){g={key:k+'#'+gs.length,type:m.type,a:[m.teamA,m.teamB].sort()[0],b:[m.teamA,m.teamB].sort()[1],ties:[],t:0};gs.push(g);out.push(g)}
+  g.ties.push(m);g.t=Math.max(g.t,m.updatedAt||0)}
+ return out.sort((x,y)=>y.t-x.t)}
+function completeEncounters(){return encounters().filter(e=>{if(String(e.type)!=='League')return false;const d=e.ties.filter(m=>m.status==='done'&&m.winner);return d.length>=7&&!e.ties.some(m=>m.status==='live')})
+ .map(e=>({...e,doneAt:Math.max(...e.ties.map(m=>m.updatedAt||0))})).sort((x,y)=>x.doneAt-y.doneAt)}
+function tableFrom(encs){const st={};for(const t of TEAMS)st[t.k]={P:0,W:0,L:0,TW:0,TL:0,PTS:0,R:0};
+ for(const e of encs){const done=e.ties.filter(m=>m.status==='done'&&m.winner);const pts={[e.a]:0,[e.b]:0};
   for(const m of done){const w=m.winner==='A'?m.teamA:m.teamB,l=w===m.teamA?m.teamB:m.teamA;pts[w]+=10;st[w].TW++;st[l].TL++;st[m.teamA].R+=m.sA;st[m.teamB].R+=m.sB}
-  for(const k of[e.a,e.b]){st[k].PTS+=pts[k]}
-  if(done.length>=7||e.ties.every(m=>m.status==='done')){st[e.a].P++;st[e.b].P++;if(pts[e.a]>pts[e.b]){st[e.a].W++;st[e.b].L++}else if(pts[e.b]>pts[e.a]){st[e.b].W++;st[e.a].L++}}}
- return TEAMS.slice().sort((x,y)=>st[y.k].PTS-st[x.k].PTS||st[y.k].R-st[x.k].R).map(t=>({t,s:st[t.k]}))}
-function pointsTable(){const rows=standings();return `<div class="card"><h2 style="margin:0 0 6px">Points table</h2><div class="scroll"><table><thead><tr><th>#</th><th>Team</th><th class="n">P</th><th class="n">W</th><th class="n">L</th><th class="n">Ties</th><th class="n">Rally</th><th class="n">Pts</th></tr></thead><tbody>
- ${rows.map((r,i)=>`<tr><td>${i+1}</td><td><span class="teamopt"><img alt="" src="${LOGO[r.t.k]}" style="width:24px;height:28px;object-fit:cover;border-radius:4px">${esc(r.t.n)}</span></td><td class="n">${r.s.P}</td><td class="n">${r.s.W}</td><td class="n">${r.s.L}</td><td class="n">${r.s.TW}-${r.s.TL}</td><td class="n">${r.s.R}</td><td class="n"><b>${r.s.PTS}</b></td></tr>`).join('')}</tbody></table></div>
- <p class="muted" style="margin:8px 0 0">Pts = 10 per tie won · Rally = total rally points won · ranked by points, then rally points.</p></div>`}
+  st[e.a].PTS+=pts[e.a];st[e.b].PTS+=pts[e.b];st[e.a].P++;st[e.b].P++;
+  if(pts[e.a]>pts[e.b]){st[e.a].W++;st[e.b].L++}else if(pts[e.b]>pts[e.a]){st[e.b].W++;st[e.a].L++}}
+ const h2h=(x,y)=>{let p=0;for(const e of encs){if(!((e.a===x&&e.b===y)||(e.a===y&&e.b===x)))continue;for(const m of e.ties)if(m.status==='done'&&m.winner){const w=m.winner==='A'?m.teamA:m.teamB;p+=w===x?10:w===y?-10:0}}return p};
+ const cmp=(x,y)=>st[y.k].PTS-st[x.k].PTS||st[y.k].R-st[x.k].R||st[y.k].W-st[x.k].W||-h2h(x.k,y.k);
+ const rows=TEAMS.slice().sort(cmp).map(t=>({t,s:st[t.k]}));
+ let pos=0;rows.forEach((r,i)=>{if(i===0||cmp(rows[i-1].t,r.t)!==0)pos=i+1;r.pos=pos});return rows}
+function standings(){const encs=completeEncounters();const rows=tableFrom(encs);
+ if(encs.length>1){const prev=tableFrom(encs.slice(0,-1));const pp={};prev.forEach(r=>pp[r.t.k]=r.pos);rows.forEach(r=>r.move=(pp[r.t.k]||r.pos)-r.pos)}
+ rows.last=encs[encs.length-1];return rows}
+function pointsTable(){const rows=standings(),last=rows.last;
+ const live=encounters().filter(e=>String(e.type)==='League').filter(e=>e.ties.some(m=>m.status==='live')||(!e.ties.every(m=>m.status==='done')||e.ties.filter(m=>m.status==='done').length<7)&&e.ties.some(m=>m.status==='done'));
+ const mv=r=>!r.move?'<span class="mv eq">–</span>':r.move>0?`<span class="mv up">▲${r.move}</span>`:`<span class="mv dn">▼${-r.move}</span>`;
+ return `<div class="card"><div class="enc"><h2 style="margin:0">Points table</h2>${last?`<span class="muted" style="font-size:13px">After: ${esc(team(last.a).n.split(' ')[0])} vs ${esc(team(last.b).n.split(' ')[0])}</span>`:''}</div><div class="scroll" style="margin-top:6px"><table class="ptable"><thead><tr><th>#</th><th></th><th>Team</th><th class="n">P</th><th class="n">W</th><th class="n">L</th><th class="n">Ties</th><th class="n">Rally</th><th class="n">Pts</th></tr></thead><tbody>
+ ${rows.map(r=>`<tr><td><b>${r.pos}</b></td><td>${mv(r)}</td><td><span class="teamopt"><img alt="" src="${LOGO[r.t.k]}" style="width:24px;height:28px;object-fit:cover;border-radius:4px">${esc(r.t.n)}</span></td><td class="n">${r.s.P}</td><td class="n">${r.s.W}</td><td class="n">${r.s.L}</td><td class="n">${r.s.TW}-${r.s.TL}</td><td class="n">${r.s.R}</td><td class="n"><b>${r.s.PTS}</b></td></tr>`).join('')}</tbody></table></div>
+ <p class="muted" style="margin:8px 0 0">Position = match points (10 per tie won) → total rally points → matches won → head-to-head. Updated when each match is completed${live.length?` · ${live.length} match${live.length>1?'es':''} in progress not yet counted`:''}. ▲▼ = change after the last match.</p></div>`}
 function resultsBlock(compact){const enc=encounters();
  const fp={};for(const t of TEAMS)fp[t.k]={pts:0,good:0,bad:0};
  for(const m of matches)for(const f of m.fp||[]){const k=f.side==='A'?m.teamA:m.teamB;if(!fp[k])continue;fp[k].pts+=f.pts;f.pts>0?fp[k].good++:fp[k].bad++}
@@ -451,7 +466,7 @@ function resultsBlock(compact){const enc=encounters();
  <div class="card"><h2 style="margin:0 0 6px">Fair Play standings</h2><table><thead><tr><th>Team</th><th class="n">+</th><th class="n">−</th><th class="n">Points</th></tr></thead><tbody>
  ${fpRows.map(t=>`<tr><td><span class="teamopt"><img alt="" src="${LOGO[t.k]}" style="width:24px;height:28px;object-fit:cover;border-radius:4px">${esc(t.n)}</span></td><td class="n">${fp[t.k].good}</td><td class="n">${fp[t.k].bad}</td><td class="n"><b>${fp[t.k].pts>0?'+':''}${fp[t.k].pts}</b></td></tr>`).join('')}</tbody></table>
  <p class="muted" style="margin:8px 0 0">Good sportsmanship +1 · Warning −1 · Yellow card −2 · Red card −5. Highest total wins the Fair Play award.</p></div></div>`}
-function encOf(m){const key=encKey(m);const ties=matches.filter(x=>encKey(x)===key&&(x.status==='done'||x.status==='live')).sort((x,y)=>x.tie-y.tie);
+function encOf(m){const g=encounters().find(e=>e.ties.some(x=>x.id===m.id));const ties=g?g.ties.slice().sort((x,y)=>x.tie-y.tie):[m];
  const pts={[m.teamA]:0,[m.teamB]:0};for(const x of ties)if(x.status==='done'&&x.winner){const w=x.winner==='A'?x.teamA:x.teamB;pts[w]=(pts[w]||0)+10}return{ties,pts}}
 function liveCard(m,big){const A=team(m.teamA),B=team(m.teamB),t=tieOf(m),f=flagOf(m),e=encOf(m);
  const side=s=>{const T=s==='A'?A:B,P=s==='A'?m.playersA:m.playersB;return `<div class="lv-t ${s==='B'?'r':''}"><img alt="" src="${LOGO[T.k]}"><div><b><em class="nf">${esc(T.n)}</em><em class="ns">${esc(T.n.split(' ')[0])}</em></b><span>${P.map(short).map(esc).join(' / ')||'Team'}</span></div></div>`};
