@@ -669,12 +669,19 @@ try{
  db={doc:p=>({set:d=>setDoc(doc(fs,p),d),delete:()=>deleteDoc(doc(fs,p))})};
  onAuthStateChanged(auth,u=>{authUser=u||null;canWrite=u?null:false;if(!u)cur=null;render()});
  const timer=setTimeout(()=>{if(!loaded){loadNote='Live scores can\'t be reached yet — check your connection.';render()}},10000);
- onSnapshot(query(collection(fs,'matches'),orderBy('updatedAt','desc'),limit(300)),{includeMetadataChanges:false},s=>{
+ const mq=query(collection(fs,'matches'),orderBy('updatedAt','desc'),limit(300));let unsub=null,pauseT=null;
+ const listen=()=>{if(unsub)return;unsub=onSnapshot(mq,{includeMetadataChanges:false},s=>{
   matches=s.docs.map(x=>x.data()).filter(Boolean);
   if(!s.metadata.fromCache){loaded=true;clearTimeout(timer);loadNote=''}
   if(cur&&!saving&&!pending){const fresh=matches.find(m=>m.id===cur.id);if(fresh&&(fresh.updatedAt||0)>(cur.updatedAt||0))cur=JSON.parse(JSON.stringify(fresh))}
   const a=document.activeElement;if(a&&(a.tagName==='SELECT'||a.tagName==='INPUT')&&!cur)return;render()},
-  e=>{clearTimeout(timer);loaded=true;loadNote='Live scores stopped updating ('+(e.code||'error')+'). Reload the page to reconnect.';render()});
+  e=>{clearTimeout(timer);loaded=true;unsub=null;loadNote='Live scores stopped updating ('+(e.code||'error')+'). Reload the page to reconnect.';render()})};
+ // Save free-plan reads: stop listening while the screen is hidden (phone locked / app in background), reconnect when visible.
+ const stopListen=()=>{if(unsub){unsub();unsub=null}};
+ document.addEventListener('visibilitychange',()=>{clearTimeout(pauseT);
+  if(document.visibilityState==='hidden'){const tryStop=()=>{if(document.visibilityState!=='hidden')return;if(saving||pending){pauseT=setTimeout(tryStop,5000);return}stopListen()};pauseT=setTimeout(tryStop,20000)}else listen()});
+ window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible')listen()});
+ listen();
 }catch(e){authUser=null;loaded=true;loadNote=e.message==='config'?'Setup needed: paste your Firebase settings into config.js (see README).':'Could not start: '+e.message;render()}
 }
 </script>
