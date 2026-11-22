@@ -289,11 +289,21 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
 function encounters(){const map={};
  for(const m of matches.filter(m=>m.status==='done'||m.status==='live')){const k=encKey(m);(map[k]=map[k]||{type:m.type,a:[m.teamA,m.teamB].sort()[0],b:[m.teamA,m.teamB].sort()[1],ties:[],t:0}).ties.push(m);map[k].t=Math.max(map[k].t,m.updatedAt||0)}
  return Object.values(map).sort((x,y)=>y.t-x.t)}
+function standings(){const st={};for(const t of TEAMS)st[t.k]={P:0,W:0,L:0,TW:0,TL:0,PTS:0,R:0};
+ for(const e of encounters()){const done=e.ties.filter(m=>m.status==='done'&&m.winner);if(!done.length)continue;
+  const pts={[e.a]:0,[e.b]:0};
+  for(const m of done){const w=m.winner==='A'?m.teamA:m.teamB,l=w===m.teamA?m.teamB:m.teamA;pts[w]+=10;st[w].TW++;st[l].TL++;st[m.teamA].R+=m.sA;st[m.teamB].R+=m.sB}
+  for(const k of[e.a,e.b]){st[k].PTS+=pts[k]}
+  if(done.length>=7||e.ties.every(m=>m.status==='done')){st[e.a].P++;st[e.b].P++;if(pts[e.a]>pts[e.b]){st[e.a].W++;st[e.b].L++}else if(pts[e.b]>pts[e.a]){st[e.b].W++;st[e.a].L++}}}
+ return TEAMS.slice().sort((x,y)=>st[y.k].PTS-st[x.k].PTS||st[y.k].R-st[x.k].R).map(t=>({t,s:st[t.k]}))}
+function pointsTable(){const rows=standings();return `<div class="card"><h2 style="margin:0 0 6px">Points table</h2><div class="scroll"><table><thead><tr><th>#</th><th>Team</th><th class="n">P</th><th class="n">W</th><th class="n">L</th><th class="n">Ties</th><th class="n">Rally</th><th class="n">Pts</th></tr></thead><tbody>
+ ${rows.map((r,i)=>`<tr><td>${i+1}</td><td><span class="teamopt"><img alt="" src="${LOGO[r.t.k]}" style="width:24px;height:28px;object-fit:cover;border-radius:4px">${esc(r.t.n)}</span></td><td class="n">${r.s.P}</td><td class="n">${r.s.W}</td><td class="n">${r.s.L}</td><td class="n">${r.s.TW}-${r.s.TL}</td><td class="n">${r.s.R}</td><td class="n"><b>${r.s.PTS}</b></td></tr>`).join('')}</tbody></table></div>
+ <p class="muted" style="margin:8px 0 0">Pts = 10 per tie won · Rally = total rally points won · ranked by points, then rally points.</p></div>`}
 function resultsBlock(compact){const enc=encounters();
  const fp={};for(const t of TEAMS)fp[t.k]={pts:0,good:0,bad:0};
  for(const m of matches)for(const f of m.fp||[]){const k=f.side==='A'?m.teamA:m.teamB;if(!fp[k])continue;fp[k].pts+=f.pts;f.pts>0?fp[k].good++:fp[k].bad++}
  const fpRows=TEAMS.slice().sort((a,b)=>fp[b.k].pts-fp[a.k].pts);
- return `<div class="grid2">
+ return `${pointsTable()}<div class="grid2" style="margin-top:14px">
  <div class="card"><h2 style="margin:0 0 6px">Encounters</h2>${enc.length?enc.map(e=>{const pts=k=>e.ties.filter(m=>m.status==='done'&&m.winner&&(m.winner==='A'?m.teamA:m.teamB)===k).length*10;
   return `<div style="padding:10px 0;border-top:1px solid var(--line)"><div class="enc"><b>${esc(team(e.a).n)} <span class="num">${pts(e.a)}</span> – <span class="num">${pts(e.b)}</span> ${esc(team(e.b).n)}</b><span class="pill">${esc(e.type)}</span></div>
   <div class="muted">${e.ties.sort((x,y)=>x.tie-y.tie).map(m=>`Tie ${m.tie}: ${m.status==='live'?'<span class="pill onair">LIVE</span> ':''}${m.teamA===e.a?m.sA+'–'+m.sB:m.sB+'–'+m.sA}`).join(' · ')}</div></div>`}).join(''):'<p class="muted">No ties scored yet.</p>'}</div>
