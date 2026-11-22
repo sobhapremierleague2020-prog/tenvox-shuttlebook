@@ -152,6 +152,10 @@ em.nf,em.ns{font-style:normal}em.ns{display:none}
 @media(max-width:860px){.lv-grid{grid-template-columns:minmax(0,1fr)}.lv-courtbox .court{max-height:50vh;max-width:240px}.lv-h{font-size:22px}.lv-t img{width:32px;height:38px}.lv-t b{font-size:16px}}
 
 /* ===== full-screen phone scoring ===== */
+.ms.choosing .ms-court,.ms.choosing .ms-line{display:none}.ms.choosing .ms-act{flex:1 1 auto;min-height:0;overflow:auto;align-content:start;margin-top:0}
+.ms.choosing .ms-ask{font-size:24px;padding-top:6px}.ms.choosing .ms-srvteam button{min-height:58px;font-size:19px}.ms.choosing .ms-srvteam .ms-swapside{min-height:42px;font-size:14px}
+.ms-act{max-height:78dvh;overflow:auto;-webkit-overflow-scrolling:touch}
+
 .ms-lock{background:#2c2510;border:1px solid #5a4a1c;border-radius:14px;padding:14px;color:#fff;font-size:15px}.ms-lock span{color:#e8d9a8;font-size:14px}.ms-lock .row button{min-height:52px;flex:1}.ms-lock #back{background:#24352e;color:#fff}
 
 body.mscore{overflow:hidden}body.mscore header{display:none}body.mscore main{padding:0}
@@ -531,7 +535,7 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A0=team(m.teamA),B0=team(m.team
  let actions='';
  if(m.status==='live'&&!isMine(m)){actions=lockBox(m,true)}
  else if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><div class="ms-sec"><button class="ms-share" id="shareEnc">📤 Share match poster</button><button class="ms-share2" id="shareTie">📤 Tie poster</button></div><button class="ms-wide" id="back">← Back to tie list</button>`}
- else if(!m.serveTeam){actions=`<div class="ms-ask">Who serves first?</div><div class="ms-srvgrid">${order.map(s=>`<div class="ms-srvteam" style="--c:${T(s).c}"><span>${esc(T(s).n)}</span>${P(s).map(n=>`<button data-srv="${s}|${esc(n)}">${esc(short(n))}</button>`).join('')}<button class="ms-swapside" data-swap="${s}">⇄ Swap sides</button></div>`).join('')}</div>`}
+ else if(!m.serveTeam){actions=`<div class="ms-ask">Who serves first?</div><div class="ms-last">Tap the player who will serve. Use ⇄ to switch who stands in the right court.</div><div class="ms-srvgrid">${order.map(s=>`<div class="ms-srvteam" style="--c:${T(s).c}"><span>${esc(T(s).n)}</span>${P(s).map(n=>`<button data-srv="${s}|${esc(n)}">${esc(short(n))}</button>`).join('')}<button class="ms-swapside" data-swap="${s}">⇄ Swap sides</button></div>`).join('')}</div>`}
  else if(w){actions=`<button class="ms-confirm" id="finish2">✔ Confirm result<br><small>${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</small></button><button class="ms-wide ms-undo" id="undo2">↶ Undo last point</button>`}
  else{actions=`<div class="ms-last">${esc(lastMsg||'Tap the team that won the rally')}</div>
   <div class="ms-pads">${order.map(s=>`<button class="ms-plus" data-pt="${s}" style="--c:${T(s).c}" aria-label="Point to ${esc(T(s).n)}"><b>+1</b><span>${esc(T(s).n)}</span></button>`).join('')}</div>
@@ -539,7 +543,7 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A0=team(m.teamA),B0=team(m.team
  const ivl=showInterval&&m.status==='live'?`<div class="ms-iv">Interval at ${Math.ceil(m.target/2)} — change ends? <button id="ivYes">Change</button><button id="ivNo">Later</button></div>`:'';
  const sh=sheet?`<div class="ms-sheet-bg" id="msClose"></div><div class="ms-sheet">${sheet==='fp'?`<div class="enc"><h3 style="margin:0">Fair play</h3><button id="msClose2">Done</button></div><div class="stack" style="margin-top:12px">${fpPanel(m)}</div>`:
   `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="shareEnc">📤 Share match poster on WhatsApp</button><button class="ms-item" id="handover">🔄 Swap scorer (hand over)</button><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
- return `<div class="ms"><div class="ms-top"><span><span class="pill onair">LIVE</span> Tie ${m.tie} · ${t.c} · ${esc(m.court)} · to ${m.target}</span><button id="msMenu" aria-label="Tie options">⋯</button></div>
+ return `<div class="ms ${m.status==='live'&&!m.serveTeam&&isMine(m)?'choosing':''}"><div class="ms-top"><span><span class="pill onair">LIVE</span> Tie ${m.tie} · ${t.c} · ${esc(m.court)} · to ${m.target}</span><button id="msMenu" aria-label="Tie options">⋯</button></div>
  <div class="ms-board">${scoreCol(order[0])}<div class="ms-vs">${f?`<span class="${f.startsWith('GOLDEN')?'g':''}">${esc(f)}</span>`:w?'<span class="g">GAME</span>':'vs'}</div>${scoreCol(order[1])}</div>
  ${m.serveTeam&&m.status==='live'?`<div class="ms-line">${srvLine(m)}</div>`:''}${ivl}<div class="ms-court">${courtView(m,false)}</div><div class="ms-act">${actions}</div>${sh}</div>`}
 /* ---------- result posters + share ---------- */
