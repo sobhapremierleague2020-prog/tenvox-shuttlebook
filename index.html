@@ -135,6 +135,8 @@ em.nf,em.ns{font-style:normal}em.ns{display:none}
 @media(max-width:860px){.lv-grid{grid-template-columns:minmax(0,1fr)}.lv-courtbox .court{max-height:50vh;max-width:240px}.lv-h{font-size:22px}.lv-t img{width:32px;height:38px}.lv-t b{font-size:16px}}
 
 /* ===== full-screen phone scoring ===== */
+.ms-lock{background:#2c2510;border:1px solid #5a4a1c;border-radius:14px;padding:14px;color:#fff;font-size:15px}.ms-lock span{color:#e8d9a8;font-size:14px}.ms-lock .row button{min-height:52px;flex:1}.ms-lock #back{background:#24352e;color:#fff}
+
 body.mscore{overflow:hidden}body.mscore header{display:none}body.mscore main{padding:0}
 .ms{position:fixed;inset:0;height:100dvh;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto;background:#0b1712;color:#fff;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);z-index:6;-webkit-user-select:none;user-select:none}
 .ms-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;font-size:14px;color:#cfe3da}
@@ -256,7 +258,9 @@ function flagOf(m){if(m.status==='done'||winnerOf(m))return'';const t=m.target,a
  if(b===t-1&&a<t-1)return'GAME POINT · '+team(m.teamB).n.toUpperCase();return''}
 function snap(m){return{sA:m.sA,sB:m.sB,serveTeam:m.serveTeam,server:m.server,posA:{...m.posA},posB:{...m.posB}}}
 function point(side){const m=cur;if(!m||m.status!=='live')return;if(!m.serveTeam){toast('Choose who serves first');return}
+ if(!isMine(m)){toast('Another phone is scoring this tie. Tap Take over first.');render();return}
  if(Date.now()-lastTap<600)return;lastTap=Date.now();
+ if(!m.scorer)m.scorer={dev:MYDEV,name:myName||'Scorer',at:Date.now()};
  if(winnerOf(m)){toast('Game is over — confirm the result or undo');return}
  m.hist=(m.hist||[]).concat([{...snap(m),last:side}]).slice(-300);
  const pos=side==='A'?m.posA:m.posB;
@@ -267,6 +271,15 @@ function point(side){const m=cur;if(!m||m.status!=='live')return;if(!m.serveTeam
  if(Math.max(m.sA,m.sB)===half&&!m.intervalDone){m.intervalDone=true;showInterval=true}
  lastMsg='Point to '+team(side==='A'?m.teamA:m.teamB).n+' · '+m.sA+'–'+m.sB;save(m);render()}
 let showInterval=false;
+let MYDEV='',myName='';try{MYDEV=localStorage.getItem('rc-dev')||'';myName=localStorage.getItem('rc-name')||''}catch(e){}
+if(!MYDEV){MYDEV='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);try{localStorage.setItem('rc-dev',MYDEV)}catch(e){}}
+const isMine=m=>!m||!m.scorer||m.scorer.dev===MYDEV;
+const lockedByOther=m=>!!(m&&m.scorer&&m.scorer.dev!==MYDEV&&Date.now()-(m.scorer.at||0)<180000);
+function ago(t){const s=Math.max(0,Math.round((Date.now()-(t||0))/1000));return s<60?s+'s ago':Math.round(s/60)+' min ago'}
+function claim(m){m.scorer={dev:MYDEV,name:myName||'Scorer',at:Date.now()};save(m)}
+function lockBox(m,mobile){const nm=esc((m.scorer&&m.scorer.name)||'another scorer');
+ return `<div class="${mobile?'ms-lock':'note'}"><b>🔒 ${nm} is scoring this tie on another phone</b><br><span>Last update ${ago(m.scorer&&m.scorer.at)}. Only one phone can score a tie.</span>
+ <div class="row" style="margin-top:10px"><button class="btn-gold" id="takeover">Take over scoring</button><button id="back">← Back</button></div></div>`}
 function undo(side){const m=cur;if(!m||!(m.hist||[]).length){toast('Nothing to undo');return}
  const h=m.hist[m.hist.length-1];
  if(side&&h.last!==side){toast('Last point went to '+team(h.last==='A'?m.teamA:m.teamB).n+' — use its − first');return}
@@ -281,8 +294,11 @@ function swapSide(side){const m=cur;if(m.sA||m.sB)return;const pos=side==='A'?m.
  const r=pos.R;pos.R=pos.L;pos.L=r;save(m);render()}
 /* ---------- persistence ---------- */
 let saving=false,pending=null;
-function save(m){m.updatedAt=Date.now();pending=JSON.parse(JSON.stringify(m));if(!saving)flush()}
+function save(m){if(m.scorer&&m.scorer.dev===MYDEV)m.scorer.at=Date.now();m.updatedAt=Date.now();pending=JSON.parse(JSON.stringify(m));if(!saving)flush()}
 async function flush(){saving=true;while(pending){const d=pending;pending=null;
+ if(d.scorer&&d.scorer.dev!==MYDEV&&!d._takeover)continue;
+ {const srv=matches.find(x=>x.id===d.id);if(srv&&lockedByOther(srv)&&!d._takeover){if(cur&&cur.id===d.id){cur=JSON.parse(JSON.stringify(srv));toast('Scoring was taken over by '+(srv.scorer.name||'another phone'));render()}continue}}
+ delete d._takeover;
  try{await db.doc('matches/'+d.id).set(d)}catch(e){
   if(e&&(e.code==='unavailable'||e.code==='deadline-exceeded')){await new Promise(r=>setTimeout(r,600+Math.random()*600));if(!pending)pending=d;continue}
   if(e&&(e.code==='permission-denied'||e.code==='invalid_argument')){canWrite=false;toast('This account is not on the scorer list. Ask the organiser to add your email.');render()}
@@ -310,8 +326,9 @@ function setupView(){
  return `<div class="stack">
  ${canWrite===false?`<div class="note">Signed in as ${esc(authUser&&authUser.email)}, but this email is not on the scorer list. Ask the organiser to add it.</div>`:''}
  ${loadNote?`<div class="note err">${esc(loadNote)}</div>`:''}
- ${live.length?`<div class="card"><h2 style="margin:0 0 8px">Live now — resume scoring</h2>${live.map(m=>`<div class="enc" style="padding:8px 0;border-top:1px solid var(--line)"><span><span class="pill onair">LIVE</span> ${esc(m.court)} · Tie ${m.tie} · ${esc(team(m.teamA).n)} <b class="num">${m.sA}–${m.sB}</b> ${esc(team(m.teamB).n)}</span><button data-resume="${m.id}">Resume</button></div>`).join('')}</div>`:''}
+ ${live.length?`<div class="card"><h2 style="margin:0 0 8px">Live now — resume scoring</h2>${live.map(m=>`<div class="enc" style="padding:8px 0;border-top:1px solid var(--line)"><span><span class="pill onair">LIVE</span> ${esc(m.court)} · Tie ${m.tie} · ${esc(team(m.teamA).n)} <b class="num">${m.sA}–${m.sB}</b> ${esc(team(m.teamB).n)}</span>${lockedByOther(m)?`<span class="muted" style="font-size:13px">🔒 ${esc(m.scorer.name||"Scorer")} · ${ago(m.scorer.at)}</span>`:""}<button data-resume="${m.id}">${lockedByOther(m)?"Open":"Resume"}</button></div>`).join('')}</div>`:''}
  <div class="card stack">
+  <div><label for="scName">Your name (shown to other scorers)</label><input id="scName" value="${esc(myName)}" placeholder="e.g. Rahul" autocomplete="name" style="width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:0 12px;font-size:16px"></div>
   <h2 style="margin:0">New tie</h2>
   <div><label>Match type</label><div class="seg" id="types">${TYPES.map(t=>`<button data-type="${t}" class="${t===setup.type?'on':''}">${t}</button>`).join('')}</div></div>
   <div class="grid3">
@@ -338,7 +355,7 @@ function startMatch(){const n=slots(setup.tie),id='m'+Date.now().toString(36)+Ma
  const pa=setup.pa.slice(0,n),pb=setup.pb.slice(0,n);
  const pos=a=>({R:a[0],L:a[1],...(a[2]?{C:a[2]}:{})});
  cur={id,type:setup.type,court:setup.court,teamA:setup.a,teamB:setup.b,tie:setup.tie,playersA:pa,playersB:pb,target:setup.target,rule:setup.rule,
-  status:'live',sA:0,sB:0,serveTeam:null,server:null,posA:pos(pa),posB:pos(pb),swapped:false,hist:[],fp:[],winner:null,createdAt:Date.now()};
+  status:'live',sA:0,sB:0,serveTeam:null,server:null,posA:pos(pa),posB:pos(pb),swapped:false,hist:[],fp:[],winner:null,createdAt:Date.now(),scorer:{dev:MYDEV,name:myName||'Scorer',at:Date.now()}};
  try{localStorage.setItem('rc-setup',JSON.stringify({type:setup.type,court:setup.court,a:setup.a,b:setup.b,tie:setup.tie,target:setup.target,rule:setup.rule}))}catch(e){}
  save(cur);render()}
 /* ---------- court ---------- */
@@ -375,10 +392,11 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
  return `<p style="margin:0 0 10px"><span class="pill ${m.status==='live'?'onair':''}">${m.status==='live'?'LIVE':'FINAL'}</span> <b>${esc(m.type)}</b> · ${esc(m.court)} · Tie ${m.tie} · ${t.c} · to ${m.target}${m.rule==='golden'?' (golden point)':' (deuce)'}</p>
  <div class="live"><div>${scoreStrip(m)}${courtView(m,true)}</div>
  <div class="stack">
+  ${m.status==='live'&&!isMine(m)?lockBox(m,false):''}
   ${!m.serveTeam&&m.status==='live'?`<div class="note">Who serves first? Tap that player on the court. Use ⇄ Swap to set who stands in the right court.</div>`:''}
   ${showInterval&&m.status==='live'?`<div class="note">Interval at ${Math.ceil(m.target/2)}. Change ends now? <button id="ivYes" class="btn-gold" style="margin-left:8px">Change court</button> <button id="ivNo">Not now</button></div>`:''}
   <div class="pads">${order.map(s=>{const T=s==='A'?A:B;return `<div class="pad" style="background:${T.c}22;border:2px solid ${T.c}"><div class="pn">${esc(T.n)}</div>
-   <button class="plus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'||w?'disabled':''} aria-label="Point to ${esc(T.n)}">+1</button>
+   <button class="plus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'||w||!isMine(m)?'disabled':''} aria-label="Point to ${esc(T.n)}">+1</button>
    <button class="minus" data-minus="${s}" ${(m.hist||[]).length?'':'disabled'} aria-label="Remove last point of ${esc(T.n)}">−</button></div>`}).join('')}</div>
   <div class="row deskctl"><button id="undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swapCourt">⇆ Change court</button></div>
   ${w&&m.status==='live'?`<button class="btn-gold btn-big deskctl" id="finish">Confirm result · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button>`:''}
@@ -388,7 +406,7 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
    <div class="row">${Object.entries(FP).map(([k,v])=>`<button data-fp="${k}" style="${v.p>0?'background:#2f9e4f;color:#fff':k==='red'?'background:var(--red);color:#fff':k==='yellow'?'background:var(--gold);color:var(--goldink)':''}">${v.t} ${v.p>0?'+':''}${v.p}</button>`).join('')}</div>
    ${m.fp.length?`<ul class="fp-list">${m.fp.slice().reverse().map(f=>`<li><span><b>${f.pts>0?'+':''}${f.pts}</b> ${esc(FP[f.kind].t)} · ${esc(team(f.side==='A'?m.teamA:m.teamB).n)}${f.who?' · '+esc(f.who):''} <span class="muted">(${f.at})</span></span><button data-fpdel="${f.id}">Remove</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No fair play entries for this tie yet.</p>'}
   </div></details>
-  <div class="row"><button id="back">← Back to setup</button><button id="del" style="${confirmDel?'background:var(--red);color:#fff':''}">${confirmDel?'Tap again to delete this tie':'Delete tie'}</button></div>
+  <div class="row"><button id="handover">🔄 Swap scorer</button><button id="back">← Back to setup</button><button id="del" style="${confirmDel?'background:var(--red);color:#fff':''}">${confirmDel?'Tap again to delete this tie':'Delete tie'}</button></div>
  </div></div>
  <div class="mbar">${w&&m.status==='live'?`<button class="btn-gold mfinish" id="finish2">✔ Confirm · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button><button class="mundo" id="undo2">↶</button>`:
   order.map((s,i)=>{const T=s==='A'?A:B,sc=s==='A'?m.sA:m.sB;return `${i===1?`<div class="mmid"><button class="mundo" id="undo3" ${(m.hist||[]).length?'':'disabled'} aria-label="Undo last point">↶</button><button class="mundo" id="swap3" aria-label="Change court">⇆</button></div>`:''}<div class="mteam"><button class="mplus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'?'disabled':''} aria-label="Point to ${esc(T.n)}"><span>${esc(short(T.n.split(' ')[0]))}</span><b>${sc}</b><i>+1</i></button><button class="mminus" data-minus="${s}" ${(m.hist||[]).length?'':'disabled'} aria-label="Remove last point of ${esc(T.n)}">−</button></div>`}).join('')}</div>`}
@@ -469,7 +487,8 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB)
  const f=flagOf(m);
  const scoreCol=s=>`<div class="ms-team ${m.serveTeam===s?'srvside':''}" style="--c:${T(s).c}"><div class="ms-tn">${esc(T(s).n)}</div><div class="ms-pl">${P(s).map(short).map(esc).join(' / ')||'&nbsp;'}</div><div class="ms-sc num">${S(s)}</div>${m.serveTeam===s?'<div class="ms-srv">● SERVING</div>':'<div class="ms-srv off">&nbsp;</div>'}</div>`;
  let actions='';
- if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><button class="ms-wide" id="back">← Back to tie list</button>`}
+ if(m.status==='live'&&!isMine(m)){actions=lockBox(m,true)}
+ else if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><button class="ms-wide" id="back">← Back to tie list</button>`}
  else if(!m.serveTeam){actions=`<div class="ms-ask">Who serves first?</div><div class="ms-srvgrid">${order.map(s=>`<div class="ms-srvteam" style="--c:${T(s).c}"><span>${esc(T(s).n)}</span>${P(s).map(n=>`<button data-srv="${s}|${esc(n)}">${esc(short(n))}</button>`).join('')}<button class="ms-swapside" data-swap="${s}">⇄ Swap sides</button></div>`).join('')}</div>`}
  else if(w){actions=`<button class="ms-confirm" id="finish2">✔ Confirm result<br><small>${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</small></button><button class="ms-wide ms-undo" id="undo2">↶ Undo last point</button>`}
  else{actions=`<div class="ms-last">${esc(lastMsg||'Tap the team that won the rally')}</div>
@@ -477,7 +496,7 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB)
   <div class="ms-sec"><button id="undo3" class="ms-undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swap3">⇆ Change ends</button></div>`}
  const ivl=showInterval&&m.status==='live'?`<div class="ms-iv">Interval at ${Math.ceil(m.target/2)} — change ends? <button id="ivYes">Change</button><button id="ivNo">Later</button></div>`:'';
  const sh=sheet?`<div class="ms-sheet-bg" id="msClose"></div><div class="ms-sheet">${sheet==='fp'?`<div class="enc"><h3 style="margin:0">Fair play</h3><button id="msClose2">Done</button></div><div class="stack" style="margin-top:12px">${fpPanel(m)}</div>`:
-  `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
+  `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="handover">🔄 Swap scorer (hand over)</button><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
  return `<div class="ms"><div class="ms-top"><span><span class="pill onair">LIVE</span> Tie ${m.tie} · ${t.c} · ${esc(m.court)} · to ${m.target}</span><button id="msMenu" aria-label="Tie options">⋯</button></div>
  <div class="ms-board">${scoreCol(order[0])}<div class="ms-vs">${f?`<span class="${f.startsWith('GOLDEN')?'g':''}">${esc(f)}</span>`:w?'<span class="g">GAME</span>':'vs'}</div>${scoreCol(order[1])}</div>
  ${m.serveTeam&&m.status==='live'?`<div class="ms-line">${srvLine(m)}</div>`:''}${ivl}<div class="ms-court">${courtView(m,false)}</div><div class="ms-act">${actions}</div>${sh}</div>`}
@@ -497,7 +516,9 @@ app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[da
  if(d.type){setup.type=d.type;render()}else if(d.tie){setup.tie=+d.tie;setup.pa=['','',''];setup.pb=['','',''];render()}
  else if(d.target){setup.target=+d.target;render()}else if(d.rule){setup.rule=d.rule;render()}
  else if(b.id==='start')startMatch();
- else if(d.resume){cur=JSON.parse(JSON.stringify(matches.find(m=>m.id===d.resume)));confirmDel=false;lastMsg='';sheet='';render()}
+ else if(d.resume){cur=JSON.parse(JSON.stringify(matches.find(m=>m.id===d.resume)));confirmDel=false;lastMsg='';sheet='';if(!lockedByOther(cur)&&cur.status==='live'&&!isMine(cur)||(!cur.scorer&&cur.status==='live'))claim(cur);render()}
+ else if(b.id==='takeover'){cur.scorer={dev:MYDEV,name:myName||'Scorer',at:Date.now()};cur._takeover=true;lastMsg='You are now scoring this tie';save(cur);delete cur._takeover;render()}
+ else if(b.id==='handover'){cur.scorer=null;save(cur);cur=null;sheet='';lastMsg='';toast('Handed over. The new scorer taps Resume on this tie.');render()}
  else if(d.srv){const[s,n]=d.srv.split('|');setServer(s,n)}
  else if(d.swap)swapSide(d.swap);
  else if(d.pt){point(d.pt);buzz()}else if(d.minus)undo(d.minus);else if(b.id==='undo'||b.id==='undo2'||b.id==='undo3')undo();else if(b.id==='swap3'){cur.swapped=!cur.swapped;sheet='';lastMsg='Ends changed';save(cur);render()}
@@ -514,6 +535,7 @@ app.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.m
 app.addEventListener('change',e=>{const t=e.target;
  if(t.id==='ta'){setup.a=t.value;setup.pa=['','',''];render()}else if(t.id==='tb'){setup.b=t.value;setup.pb=['','',''];render()}
  else if(t.id==='court')setup.court=t.value;
+ else if(t.id==='scName'){myName=t.value.trim();try{localStorage.setItem('rc-name',myName)}catch(e){}}
  else if(t.dataset.side){(t.dataset.side==='a'?setup.pa:setup.pb)[+t.dataset.i]=t.value;render()}
  else if(t.id==='fpSide')fillWho()});
 addEventListener('hashchange',render);let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(cur)render()},200)});
