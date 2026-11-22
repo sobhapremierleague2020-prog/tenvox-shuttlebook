@@ -1117,9 +1117,11 @@ function apPanel(){const a=AP,items=assignables();
  <div><label>Tournaments &amp; matches this ID controls</label>${items.length?`<div class="ap-list">${items.map(it=>`<label class="ap-it"><input type="checkbox" data-apa="${it.id}" ${a.assigned.includes(it.id)?'checked':''}> <span>${esc(it.n)}</span> <em>${it.t==='t'?'Tournament':'Match'}</em></label>`).join('')}</div>`:'<p class="muted" style="margin:0">No tournaments or matches yet.</p>'}</div>
  <p class="muted" style="margin:0">${a.role==='organiser'?'Organiser: controls the ticked items and can create their own tournaments, matches and practice.':'Scorer: controls only the ticked items (score and edit).'}</p>
  <div class="row"><button class="btn-gold" data-x="apgo" ${apBusy?'disabled':''}>${apBusy?'Working…':a.mode==='edit'?'Save changes':'Create login & approve'}</button><button data-x="apcancel">Cancel</button></div></div>`}
-function credCard(){const c=CRED;const msg=`🏸 *TENVOX ShuttleBook* — your login is ready!\n\n👤 Username: *${c.username}*\n🔑 Password: *${c.password}*\n\nSign in here 👉 ${BASE}#signin\nYour tournaments and matches appear on the home page after you sign in.`;
+function credCard(){const c=CRED;const items=(c.items||[]).map(n=>'• '+n).join('\n');
+ const roleLine=c.role==='organiser'?`🏆 You are an *Organiser*: with this username and password you can add your own *tournaments and matches* (＋ New tournament / ＋ New match), add teams & players, and score them.`:`📋 You are a *Scorer*: with this username and password you can score the tournaments and matches assigned to you.`;
+ const msg=`🏸 *TENVOX ShuttleBook* — your login is ready!\n\n👤 Username: *${c.username}*\n🔑 Password: *${c.password}*\n\n${roleLine}${items?`\n\n✅ Assigned to you:\n${items}`:''}\n\nSign in here 👉 ${BASE}#signin\nPlease keep your password private.`;
  const ph=String(c.phone||'').replace(/\D/g,'');const wa='https://wa.me/'+(ph?(ph.length===10?'91'+ph:ph):'')+'?text='+encodeURIComponent(msg);
- return `<div class="note cred stack"><b>Login created for ${esc(c.name||c.username)} ✓</b><div class="cred-box"><span>Username</span><code>${esc(c.username)}</code><span>Password</span><code>${esc(c.password)}</code></div>
+ return `<div class="note cred stack"><b>Login created for ${esc(c.name||c.username)} ✓ · ${ROLE_NAME[c.role]||''}</b><div class="cred-box"><span>Username</span><code>${esc(c.username)}</code><span>Password</span><code>${esc(c.password)}</code></div>
  <p class="muted" style="margin:0">The password is shown only now. Send it before closing this box.</p>
  <div class="row"><a class="hbtn gold" href="${wa}" target="_blank" rel="noopener">💬 Send on WhatsApp</a><button data-x="credcopy">📋 Copy</button><button data-x="credclose">Done</button></div><textarea id="credMsg" hidden>${esc(msg)}</textarea></div>`}
 function membersView(){const pend=REQUESTS.filter(r=>r.status==='pending').sort((a,b)=>(b.at||0)-(a.at||0));const mem=MEMBERS.slice().sort((a,b)=>(a.status==='approved'?0:1)-(b.status==='approved'?0:1)||(b.at||0)-(a.at||0));
@@ -1142,7 +1144,7 @@ async function apSave(){const a=AP;a.username=String(($('#apUser')||{}).value||a
    await setDoc(doc(fsdb,'members',uid),JSON.parse(JSON.stringify({uid,username:a.username,name:a.name,phone:a.phone,email:a.email||'',city:a.city||'',club:a.club||'',ref:a.ref||'',role:a.role,assigned:a.assigned,assignedNames:aNames,status:'approved',at:Date.now(),reqId:a.reqId||'',replaces:a.replaces||''})));
    if(a.replaces){const old=MEMBERS.find(x=>x.uid===a.replaces);if(old)await setDoc(doc(fsdb,'members',old.uid),{...old,status:'disabled',replacedBy:uid,updatedAt:Date.now()})}
    if(a.reqId){const r=REQUESTS.find(x=>x.id===a.reqId);if(r)await setDoc(doc(fsdb,'requests',r.id),{...r,status:'approved',uid,decidedAt:Date.now()})}
-   CRED={username:a.username,password,name:a.name,phone:a.phone};AP=null}}
+   CRED={username:a.username,password,name:a.name,phone:a.phone,role:a.role,items:a.assigned.map(id=>aNames[id].n)};AP=null}}
  catch(err){toast(err.code==='auth/email-already-in-use'?'That username is already taken — change it':'Could not complete ('+(err.code||err.message||'error')+')')}
  apBusy=false;render()}
 app.addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!b)return;const[act,...rest]=b.dataset.x.split(':');const arg=rest.join(':');
