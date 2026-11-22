@@ -108,6 +108,12 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 
 /* ===== live view ===== */
+.ms-share{background:#1f6f43!important;color:#fff!important}.ms-share2{background:#24352e!important;color:#fff!important}
+#shareOv{position:fixed;inset:0;z-index:20}.sh-bg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.sh-panel{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--panel);color:var(--ink);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:10px;max-height:92dvh;overflow:auto}
+.sh-img{width:100%;max-height:48dvh;object-fit:contain;border-radius:12px;background:#000}
+.sh-main{min-height:56px;font-size:18px}.sh-btn{flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:12px;background:var(--line);color:var(--ink);font-weight:700;text-decoration:none;font-size:15px}
+
 .pin{display:grid;gap:8px}.pin #pinBtn{min-height:48px;background:var(--gold);color:var(--goldink);font-size:16px;border-radius:12px}
 .pin-help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;line-height:1.5}.sharei{display:inline-block;transform:rotate(-90deg)}
 @media(display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}}
@@ -415,6 +421,7 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
    <div class="row">${Object.entries(FP).map(([k,v])=>`<button data-fp="${k}" style="${v.p>0?'background:#2f9e4f;color:#fff':k==='red'?'background:var(--red);color:#fff':k==='yellow'?'background:var(--gold);color:var(--goldink)':''}">${v.t} ${v.p>0?'+':''}${v.p}</button>`).join('')}</div>
    ${m.fp.length?`<ul class="fp-list">${m.fp.slice().reverse().map(f=>`<li><span><b>${f.pts>0?'+':''}${f.pts}</b> ${esc(FP[f.kind].t)} · ${esc(team(f.side==='A'?m.teamA:m.teamB).n)}${f.who?' · '+esc(f.who):''} <span class="muted">(${f.at})</span></span><button data-fpdel="${f.id}">Remove</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No fair play entries for this tie yet.</p>'}
   </div></details>
+  <div class="row"><button id="shareEnc">📤 Share match poster</button><button id="shareTie">📤 Share tie poster</button></div>
   <div class="row"><button id="handover">🔄 Swap scorer</button><button id="back">← Back to setup</button><button id="del" style="${confirmDel?'background:var(--red);color:#fff':''}">${confirmDel?'Tap again to delete this tie':'Delete tie'}</button></div>
  </div></div>
  <div class="mbar">${w&&m.status==='live'?`<button class="btn-gold mfinish" id="finish2">✔ Confirm · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button><button class="mundo" id="undo2">↶</button>`:
@@ -508,7 +515,7 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A0=team(m.teamA),B0=team(m.team
  const scoreCol=s=>`<div class="ms-team ${m.serveTeam===s?'srvside':''}" style="--c:${T(s).c}"><div class="ms-tn">${esc(T(s).n)}</div><div class="ms-pl">${P(s).map(short).map(esc).join(' / ')||'&nbsp;'}</div><div class="ms-sc num">${S(s)}</div>${m.serveTeam===s?'<div class="ms-srv">● SERVING</div>':'<div class="ms-srv off">&nbsp;</div>'}</div>`;
  let actions='';
  if(m.status==='live'&&!isMine(m)){actions=lockBox(m,true)}
- else if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><button class="ms-wide" id="back">← Back to tie list</button>`}
+ else if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><div class="ms-sec"><button class="ms-share" id="shareEnc">📤 Share match poster</button><button class="ms-share2" id="shareTie">📤 Tie poster</button></div><button class="ms-wide" id="back">← Back to tie list</button>`}
  else if(!m.serveTeam){actions=`<div class="ms-ask">Who serves first?</div><div class="ms-srvgrid">${order.map(s=>`<div class="ms-srvteam" style="--c:${T(s).c}"><span>${esc(T(s).n)}</span>${P(s).map(n=>`<button data-srv="${s}|${esc(n)}">${esc(short(n))}</button>`).join('')}<button class="ms-swapside" data-swap="${s}">⇄ Swap sides</button></div>`).join('')}</div>`}
  else if(w){actions=`<button class="ms-confirm" id="finish2">✔ Confirm result<br><small>${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</small></button><button class="ms-wide ms-undo" id="undo2">↶ Undo last point</button>`}
  else{actions=`<div class="ms-last">${esc(lastMsg||'Tap the team that won the rally')}</div>
@@ -516,19 +523,86 @@ function mobileLiveView(){const m=cur,t=tieOf(m),A0=team(m.teamA),B0=team(m.team
   <div class="ms-sec"><button id="undo3" class="ms-undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swap3">⇆ Change ends</button></div>`}
  const ivl=showInterval&&m.status==='live'?`<div class="ms-iv">Interval at ${Math.ceil(m.target/2)} — change ends? <button id="ivYes">Change</button><button id="ivNo">Later</button></div>`:'';
  const sh=sheet?`<div class="ms-sheet-bg" id="msClose"></div><div class="ms-sheet">${sheet==='fp'?`<div class="enc"><h3 style="margin:0">Fair play</h3><button id="msClose2">Done</button></div><div class="stack" style="margin-top:12px">${fpPanel(m)}</div>`:
-  `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="handover">🔄 Swap scorer (hand over)</button><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
+  `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="shareEnc">📤 Share match poster on WhatsApp</button><button class="ms-item" id="handover">🔄 Swap scorer (hand over)</button><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
  return `<div class="ms"><div class="ms-top"><span><span class="pill onair">LIVE</span> Tie ${m.tie} · ${t.c} · ${esc(m.court)} · to ${m.target}</span><button id="msMenu" aria-label="Tie options">⋯</button></div>
  <div class="ms-board">${scoreCol(order[0])}<div class="ms-vs">${f?`<span class="${f.startsWith('GOLDEN')?'g':''}">${esc(f)}</span>`:w?'<span class="g">GAME</span>':'vs'}</div>${scoreCol(order[1])}</div>
  ${m.serveTeam&&m.status==='live'?`<div class="ms-line">${srvLine(m)}</div>`:''}${ivl}<div class="ms-court">${courtView(m,false)}</div><div class="ms-act">${actions}</div>${sh}</div>`}
+/* ---------- result posters + share ---------- */
+const LIVE_URL='https://sobhapremierleague2020-prog.github.io/rajyotsava-live/#watch';
+const loadImg=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src});
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function fitText(c,t,max,size,weight,fam){let s=size;do{c.font=`${weight} ${s}px ${fam}`;if(c.measureText(t).width<=max)break;s-=2}while(s>12);return s}
+function goldFill(c,y,h){const g=c.createLinearGradient(0,y-h,0,y+h*0.3);g.addColorStop(0,'#fff4c8');g.addColorStop(.5,'#ecb848');g.addColorStop(1,'#a0641c');return g}
+async function makePoster(kind,m){try{await document.fonts.ready}catch(e){}
+ const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');const F='"Barlow Condensed",Barlow,sans-serif',FB='Barlow,sans-serif';
+ const bg=c.createRadialGradient(W/2,260,50,W/2,500,1100);bg.addColorStop(0,'#1d4f3a');bg.addColorStop(1,'#050c09');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ for(let i=0;i<70;i++){c.fillStyle=`rgba(255,220,150,${Math.random()*.5})`;c.beginPath();c.arc(Math.random()*W,Math.random()*H,Math.random()*2.5+.5,0,7);c.fill()}
+ const lg=await loadImg(document.querySelector('header img').src);if(lg){c.save();rr(c,W/2-80,36,160,160,22);c.clip();c.drawImage(lg,W/2-80,36,160,160);c.restore()}
+ c.textAlign='center';c.textBaseline='middle';c.font=`800 70px ${F}`;c.fillStyle=goldFill(c,250,40);c.fillText('AURA RAJYOTSAVA CUP 2026',W/2,250);
+ const A=team(m.teamA),B=team(m.teamB),e=encOf(m);const done=e.ties.filter(x=>x.status==='done');const complete=done.length>=7;
+ const sub=kind==='enc'?(complete?'MATCH RESULT':'MATCH UPDATE')+' · '+String(m.type).toUpperCase():'TIE '+m.tie+' RESULT · '+tieOf(m).c.toUpperCase();
+ c.font=`700 30px ${FB}`;const sw=c.measureText(sub).width+60;c.fillStyle='#e9b445';rr(c,W/2-sw/2,292,sw,54,27);c.fill();c.fillStyle='#2a1c00';c.fillText(sub,W/2,320);
+ // teams band
+ const pa=kind==='enc'?(e.pts[m.teamA]||0):m.sA,pb=kind==='enc'?(e.pts[m.teamB]||0):m.sB;const wk=kind==='enc'?(complete?(pa>pb?m.teamA:pb>pa?m.teamB:null):null):(m.winner==='A'?m.teamA:m.teamB);
+ c.fillStyle='rgba(8,20,15,.85)';rr(c,40,380,W-80,330,28);c.fill();c.strokeStyle='#e9b445';c.lineWidth=3;c.stroke();
+ for(const [k,x] of [[m.teamA,70],[m.teamB,W-70-150]]){const im=await loadImg(LOGO[k]);if(im){c.save();rr(c,x,420,150,180,18);c.clip();const r=Math.max(150/im.width,180/im.height);c.drawImage(im,x+(150-im.width*r)/2,420+(180-im.height*r)/2,im.width*r,im.height*r);c.restore()}
+  const T=team(k);c.fillStyle=k===wk||!wk?'#fff':'#9fb3aa';const fs=fitText(c,T.n.toUpperCase(),300,40,'800',F);c.font=`800 ${fs}px ${F}`;c.textAlign=x<W/2?'left':'right';c.fillText(T.n.toUpperCase(),x<W/2?x:x+150,640);
+  if(k===wk){c.font=`800 24px ${FB}`;const bx=x<W/2?x:x+150-150;c.fillStyle='#3cbe5a';rr(c,bx,666,150,36,18);c.fill();c.fillStyle='#fff';c.textAlign='center';c.fillText('🏆 WINNER',bx+75,685)}}
+ c.textAlign='center';c.font=`800 150px ${F}`;c.fillStyle=goldFill(c,520,80);c.fillText(`${pa} – ${pb}`,W/2,520);
+ c.font=`600 26px ${FB}`;c.fillStyle='#c9dad2';
+ if(kind==='enc'){const ra=done.reduce((s,x)=>s+(x.teamA===m.teamA?x.sA:x.sB),0),rb=done.reduce((s,x)=>s+(x.teamA===m.teamA?x.sB:x.sA),0);c.fillText(`Ties ${pa/10} – ${pb/10}  ·  Rally points ${ra} – ${rb}`,W/2,612)}
+ else c.fillText(`${(m.playersA||[]).map(short).join(' / ')||A.n}  vs  ${(m.playersB||[]).map(short).join(' / ')||B.n}`,W/2,612);
+ // detail rows
+ const rows=kind==='enc'?TIES.map(tt=>{const x=e.ties.find(y=>y.tie===tt.n);return{tt,x}}):[{tt:tieOf(m),x:m}];
+ let y=760;const rh=kind==='enc'?70:170;c.fillStyle='rgba(8,20,15,.8)';rr(c,40,y-20,W-80,rows.length*rh+30,24);c.fill();
+ for(const {tt,x} of rows){const yc=y+rh/2;c.textAlign='center';c.font=`700 20px ${FB}`;c.fillStyle='#e9b445';c.fillText(`T${tt.n} · ${tt.c.toUpperCase()}`,W/2,yc-(kind==='enc'?22:58));
+  if(!x){c.font=`600 26px ${FB}`;c.fillStyle='#6f8f82';c.fillText('Yet to play',W/2,yc+6)}
+  else{const sa=x.teamA===m.teamA?x.sA:x.sB,sb=x.teamA===m.teamA?x.sB:x.sA,la=(x.teamA===m.teamA?x.playersA:x.playersB)||[],lb=(x.teamA===m.teamA?x.playersB:x.playersA)||[];
+   const aw=x.status==='done'&&sa>sb,bw=x.status==='done'&&sb>sa,big=kind==='enc'?44:110;
+   const ny=kind==='enc'?yc+8:yc-8,sy=kind==='enc'?yc+8:yc+52;const big2=kind==='enc'?44:96;
+   c.font=`600 ${kind==='enc'?26:32}px ${FB}`;c.textAlign='left';c.fillStyle=aw?'#fff':'#9fb3aa';c.fillText(la.map(short).join(' / ')||A.n,70,ny);
+   c.textAlign='right';c.fillStyle=bw?'#fff':'#9fb3aa';c.fillText(lb.map(short).join(' / ')||B.n,W-70,ny);
+   c.textAlign='center';c.font=`800 ${big2}px ${F}`;c.fillStyle=aw?'#ffd36a':'#cfd9d4';c.fillText(String(sa),W/2-(kind==='enc'?60:110),sy);c.fillStyle=bw?'#ffd36a':'#cfd9d4';c.fillText(String(sb),W/2+(kind==='enc'?60:110),sy);
+   c.fillStyle='#6f8f82';c.fillText('–',W/2,sy);if(x.status==='live'){c.font=`800 20px ${FB}`;c.fillStyle='#e2473b';c.fillText('LIVE',W/2,yc+38)}}
+  y+=rh}
+ c.textAlign='center';c.font=`700 26px ${FB}`;c.fillStyle='#dfeee7';c.fillText('21 & 22 NOV 2026  ·  ACCOLADES SPORTS, NAGASANDRA',W/2,H-78);
+ c.font=`500 22px ${FB}`;c.fillStyle='#9fd7a8';c.fillText('An initiative by VEE5 Sports Collective  ·  Live: sobhapremierleague2020-prog.github.io/rajyotsava-live',W/2,H-40);
+ return await new Promise(r=>cv.toBlob(r,'image/png'))}
+function captionFor(kind,m){const A=team(m.teamA),B=team(m.teamB),e=encOf(m);
+ if(kind==='enc'){const done=e.ties.filter(x=>x.status==='done');const pa=e.pts[m.teamA]||0,pb=e.pts[m.teamB]||0;const complete=done.length>=7;
+  const lines=TIES.map(tt=>{const x=e.ties.find(y=>y.tie===tt.n);if(!x||x.status!=='done')return null;const sa=x.teamA===m.teamA?x.sA:x.sB,sb=x.teamA===m.teamA?x.sB:x.sA;return `T${tt.n} ${tt.c}: ${sa}–${sb}${sa>sb?' ✅'+A.n.split(' ')[0]:' ✅'+B.n.split(' ')[0]}`}).filter(Boolean);
+  return `🏸 *AURA Rajyotsava Cup 2026* – ${complete?'Match Result':'Match Update'} 🏆\n\n*${A.n} ${pa} – ${pb} ${B.n}*${complete&&pa!==pb?`\n🎉 ${pa>pb?A.n:B.n} win!`:''}\n\n${lines.join('\n')}\n\n📺 Live scores: ${LIVE_URL}`}
+ const w=team(m.winner==='A'?m.teamA:m.teamB);return `🏸 *AURA Rajyotsava Cup 2026* – Tie ${m.tie} (${tieOf(m).c})\n\n*${A.n} ${m.sA} – ${m.sB} ${B.n}*\n${(m.playersA||[]).map(short).join(' / ')} vs ${(m.playersB||[]).map(short).join(' / ')}\n✅ ${w.n} win the tie\n\n📺 Live scores: ${LIVE_URL}`}
+let shareState=null;
+function shareOverlay(){let ov=document.getElementById('shareOv');if(!shareState){if(ov)ov.remove();return}
+ if(!ov){ov=document.createElement('div');ov.id='shareOv';document.body.appendChild(ov);ov.addEventListener('click',onShareClick)}
+ const st=shareState;ov.innerHTML=`<div class="sh-bg" data-sh="close"></div><div class="sh-panel"><div class="enc"><h3 style="margin:0">Share result</h3><button data-sh="close">Close</button></div>
+ ${st.busy?'<p class="muted">Creating poster…</p>':`<img class="sh-img" alt="Result poster" src="${st.url}">
+ <button class="btn-gold sh-main" data-sh="share">📤 Share on WhatsApp</button>
+ <div class="row"><a class="sh-btn" href="${st.url}" download="${st.name}">⬇ Download poster</a><button class="sh-btn" data-sh="copy">📋 Copy caption</button></div>
+ <a class="sh-btn" href="https://wa.me/?text=${encodeURIComponent(st.caption)}" target="_blank" rel="noopener">💬 Send caption only on WhatsApp</a>
+ <p class="muted" style="margin:0;font-size:13px">Tip: if WhatsApp doesn't show the caption with the image, paste it (it is copied when you tap Share).</p>`}</div>`}
+async function openShare(kind){const m=cur;if(!m)return;shareState={busy:true};shareOverlay();
+ try{const blob=await makePoster(kind,m);const A=team(m.teamA).n.split(' ')[0],B=team(m.teamB).n.split(' ')[0];
+  shareState={blob,url:URL.createObjectURL(blob),caption:captionFor(kind,m),name:`Rajyotsava_${A}_vs_${B}${kind==='tie'?'_Tie'+m.tie:''}.png`}}
+ catch(e){shareState=null;toast('Could not create the poster')}shareOverlay()}
+async function onShareClick(e){const b=e.target.closest('[data-sh]');if(!b)return;const a=b.dataset.sh,st=shareState;
+ if(a==='close'){if(st&&st.url)URL.revokeObjectURL(st.url);shareState=null;shareOverlay();return}
+ if(a==='copy'){try{await navigator.clipboard.writeText(st.caption);toast('Caption copied')}catch(err){toast('Copy not allowed — long-press to select')}return}
+ if(a==='share'){try{await navigator.clipboard.writeText(st.caption)}catch(err){}
+  const file=new File([st.blob],st.name,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:st.caption,title:'Rajyotsava Cup 2026'})}catch(err){}}
+  else{toast('Sharing not supported here — use Download, then attach in WhatsApp');}}}
 /* ---------- render + events ---------- */
 function buzz(){try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}}
 let wake=null;async function keepAwake(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cur&&cur.status==='live')keepAwake(true)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(route()==='watch'||(cur&&cur.status==='live')))keepAwake(true)});
+addEventListener('pointerdown',()=>{if(route()==='watch'||(cur&&cur.status==='live'))keepAwake(true)},{passive:true});
 app.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('fpbox'))fpOpen=e.target.open},true);
 function route(){return location.hash==='#watch'?'watch':'score'}
 function render(){const r=route();$('#tScore').className=r==='score'?'on':'';$('#tWatch').className=r==='watch'?'on':'';
  const fs=$('#fpSide')?.value,fw=$('#fpWho')?.value;
- $('#signout').hidden=!authUser;document.body.classList.toggle('scoring',!!(cur&&r==='score'&&authUser));keepAwake(!!(cur&&r==='score'&&cur.status==='live'));const mob=!!(cur&&r==='score'&&authUser&&isPhone());document.body.classList.toggle('mscore',mob);
+ $('#signout').hidden=!authUser;document.body.classList.toggle('scoring',!!(cur&&r==='score'&&authUser));keepAwake(r==='watch'||!!(cur&&r==='score'&&cur.status==='live'));const mob=!!(cur&&r==='score'&&authUser&&isPhone());document.body.classList.toggle('mscore',mob);
  app.innerHTML=r==='watch'?watchView():authUser===undefined?'<p class="muted">Checking sign-in…</p>':!authUser?loginView():cur?(mob?mobileLiveView():liveView()):setupView();
  if(cur&&r==='score'){const s=$('#fpSide');if(s){if(fs)s.value=fs;fillWho();if(fw)$('#fpWho').value=fw}}}
 function fillWho(){const s=$('#fpSide').value,ps=s==='A'?cur.playersA:cur.playersB;$('#fpWho').innerHTML='<option value="">Whole team</option>'+ps.map(p=>`<option>${esc(p)}</option>`).join('')}
@@ -547,6 +621,7 @@ app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[da
  else if(b.id==='finish'||b.id==='finish2'){cur.winner=winnerOf(cur);cur.status='done';save(cur);toast('Result saved');render()}
  else if(d.fp){const side=$('#fpSide').value,who=$('#fpWho').value;cur.fp=cur.fp.concat([{id:Date.now().toString(36),side,who,kind:d.fp,pts:FP[d.fp].p,at:cur.sA+'–'+cur.sB}]);save(cur);render()}
  else if(d.fpdel){cur.fp=cur.fp.filter(f=>f.id!==d.fpdel);save(cur);render()}
+ else if(b.id==='shareEnc'){sheet='';render();openShare('enc')}else if(b.id==='shareTie'){openShare('tie')}
  else if(b.id==='pinBtn'){if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()})}else{pinOpen=!pinOpen;render()}}
  else if(b.id==='msMenu'){sheet='menu';render()}else if(b.id==='msClose'||b.id==='msClose2'){sheet='';confirmDel=false;render()}else if(b.id==='msFp'){sheet='fp';render()}
  else if(b.id==='back'){cur=null;sheet='';lastMsg='';confirmDel=false;showInterval=false;render()}
