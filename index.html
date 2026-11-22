@@ -99,6 +99,29 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .mini b{font:700 20px "Barlow Condensed",sans-serif}
 .mini .num{font-size:36px;font-weight:800;text-align:right}
 .enc{display:flex;justify-content:space-between;gap:8px;align-items:center}
+
+/* mobile scorer */
+button{touch-action:manipulation}
+.fpbox summary{cursor:pointer;list-style:none}.fpbox summary::-webkit-details-marker{display:none}
+.fpbox summary h3::after{content:" ▾";font-size:.8em;color:var(--mute)}.fpbox[open] summary h3::after{content:" ▴"}
+.mbar{display:none}
+@media(max-width:860px){
+ body.scoring main{padding-bottom:calc(170px + env(safe-area-inset-bottom))}
+ body.scoring header{padding:8px 12px}body.scoring header h1{font-size:17px}body.scoring main{padding-top:8px}body.scoring main>p:first-child{font-size:13px;margin-bottom:6px!important}body.scoring header h1 small{display:none}body.scoring header img{height:34px}
+ body.scoring .tabs a,body.scoring .tabs button{min-height:38px;padding:0 10px;font-size:14px}
+ body.scoring .pads,body.scoring .deskctl{display:none}
+ body.scoring .court{height:min(46vh,460px);width:auto;max-width:100%;max-height:none;aspect-ratio:610/1340}
+ .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:7;gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:#0d1f19;box-shadow:0 -6px 24px rgba(0,0,0,.35);align-items:stretch}
+ .mteam{flex:1;display:grid;gap:6px}
+ .mplus{min-height:104px;border-radius:16px;color:#fff;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr;align-items:center;padding:8px 12px;text-align:left}
+ .mplus span{grid-column:1/3;font:700 15px Barlow,sans-serif;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .mplus b{font:800 46px/1 "Barlow Condensed",sans-serif}.mplus i{font:800 26px "Barlow Condensed",sans-serif;font-style:normal;justify-self:end;background:rgba(0,0,0,.22);border-radius:10px;padding:2px 10px}
+ .mplus:active{transform:scale(.97);filter:brightness(1.15)}
+ .mminus{min-height:40px;background:#24352e;color:#fff;font-size:22px;border-radius:12px}
+ .mmid{display:grid;gap:6px;width:56px}.mundo{min-height:0;height:100%;background:#24352e;color:#fff;font-size:22px;border-radius:12px;padding:0}
+ .mfinish{flex:1;min-height:72px;font-size:17px;border-radius:14px}
+ .mbar .mundo#undo2{width:64px}
+}
 @media(max-width:860px){.live{grid-template-columns:minmax(0,1fr)}.court{max-width:440px}}
 @media(max-width:600px){.sc-team img{display:none}.sc-team b{font-size:16px}.sc-team span{font-size:12px}.sc-num{font-size:46px;gap:6px}.score{padding:10px}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}header h1{font-size:22px}.tabs{width:100%}.tabs a{flex:1;justify-content:center}}
 @media(prefers-reduced-motion:no-preference){.flash{animation:fl .5s}@keyframes fl{from{background:var(--gold)}}}
@@ -275,16 +298,18 @@ function liveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=win
   <div class="pads">${order.map(s=>{const T=s==='A'?A:B;return `<div class="pad" style="background:${T.c}22;border:2px solid ${T.c}"><div class="pn">${esc(T.n)}</div>
    <button class="plus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'||w?'disabled':''} aria-label="Point to ${esc(T.n)}">+1</button>
    <button class="minus" data-minus="${s}" ${(m.hist||[]).length?'':'disabled'} aria-label="Remove last point of ${esc(T.n)}">−</button></div>`}).join('')}</div>
-  <div class="row"><button id="undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swapCourt">⇆ Change court</button></div>
-  ${w&&m.status==='live'?`<button class="btn-gold btn-big" id="finish">Confirm result · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button>`:''}
-  <div class="card stack"><div class="enc"><h3 style="margin:0">Fair play</h3><span class="muted">${esc(A.n)} ${fpTot('A')>0?'+':''}${fpTot('A')} · ${esc(B.n)} ${fpTot('B')>0?'+':''}${fpTot('B')}</span></div>
+  <div class="row deskctl"><button id="undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swapCourt">⇆ Change court</button></div>
+  ${w&&m.status==='live'?`<button class="btn-gold btn-big deskctl" id="finish">Confirm result · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button>`:''}
+  <details class="card fpbox" ${fpOpen?'open':''}><summary class="enc"><h3 style="margin:0">Fair play</h3><span class="muted">${esc(A.n)} ${fpTot('A')>0?'+':''}${fpTot('A')} · ${esc(B.n)} ${fpTot('B')>0?'+':''}${fpTot('B')}</span></summary><div class="stack" style="margin-top:12px">
    <div class="grid2"><div><label for="fpSide">Team</label><select id="fpSide"><option value="A">${esc(A.n)}</option><option value="B">${esc(B.n)}</option></select></div>
    <div><label for="fpWho">Player</label><select id="fpWho"><option value="">Whole team</option></select></div></div>
    <div class="row">${Object.entries(FP).map(([k,v])=>`<button data-fp="${k}" style="${v.p>0?'background:#2f9e4f;color:#fff':k==='red'?'background:var(--red);color:#fff':k==='yellow'?'background:var(--gold);color:var(--goldink)':''}">${v.t} ${v.p>0?'+':''}${v.p}</button>`).join('')}</div>
    ${m.fp.length?`<ul class="fp-list">${m.fp.slice().reverse().map(f=>`<li><span><b>${f.pts>0?'+':''}${f.pts}</b> ${esc(FP[f.kind].t)} · ${esc(team(f.side==='A'?m.teamA:m.teamB).n)}${f.who?' · '+esc(f.who):''} <span class="muted">(${f.at})</span></span><button data-fpdel="${f.id}">Remove</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No fair play entries for this tie yet.</p>'}
-  </div>
+  </div></details>
   <div class="row"><button id="back">← Back to setup</button><button id="del" style="${confirmDel?'background:var(--red);color:#fff':''}">${confirmDel?'Tap again to delete this tie':'Delete tie'}</button></div>
- </div></div>`}
+ </div></div>
+ <div class="mbar">${w&&m.status==='live'?`<button class="btn-gold mfinish" id="finish2">✔ Confirm · ${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</button><button class="mundo" id="undo2">↶</button>`:
+  order.map((s,i)=>{const T=s==='A'?A:B,sc=s==='A'?m.sA:m.sB;return `${i===1?`<div class="mmid"><button class="mundo" id="undo3" ${(m.hist||[]).length?'':'disabled'} aria-label="Undo last point">↶</button><button class="mundo" id="swap3" aria-label="Change court">⇆</button></div>`:''}<div class="mteam"><button class="mplus" data-pt="${s}" style="background:${T.c}" ${m.status!=='live'?'disabled':''} aria-label="Point to ${esc(T.n)}"><span>${esc(short(T.n.split(' ')[0]))}</span><b>${sc}</b><i>+1</i></button><button class="mminus" data-minus="${s}" ${(m.hist||[]).length?'':'disabled'} aria-label="Remove last point of ${esc(T.n)}">−</button></div>`}).join('')}</div>`}
 /* ---------- watch + results ---------- */
 function encounters(){const map={};
  for(const m of matches.filter(m=>m.status==='done'||m.status==='live')){const k=encKey(m);(map[k]=map[k]||{type:m.type,a:[m.teamA,m.teamB].sort()[0],b:[m.teamA,m.teamB].sort()[1],ties:[],t:0}).ties.push(m);map[k].t=Math.max(map[k].t,m.updatedAt||0)}
@@ -328,10 +353,14 @@ function loginView(){return `<div class="card stack" style="max-width:420px;marg
  <button class="btn-gold btn-big" type="submit" ${loginBusy?'disabled':''}>${loginBusy?'Signing in…':'Sign in'}</button>
  <button type="button" id="forgot" style="background:transparent;text-decoration:underline;font-weight:600">Forgot password?</button></form></div>`}
 /* ---------- render + events ---------- */
+function buzz(){try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}}
+let wake=null;async function keepAwake(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cur&&cur.status==='live')keepAwake(true)});
+app.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('fpbox'))fpOpen=e.target.open},true);
 function route(){return location.hash==='#watch'?'watch':'score'}
 function render(){const r=route();$('#tScore').className=r==='score'?'on':'';$('#tWatch').className=r==='watch'?'on':'';
  const fs=$('#fpSide')?.value,fw=$('#fpWho')?.value;
- $('#signout').hidden=!authUser;app.innerHTML=r==='watch'?watchView():authUser===undefined?'<p class="muted">Checking sign-in…</p>':!authUser?loginView():cur?liveView():setupView();
+ $('#signout').hidden=!authUser;document.body.classList.toggle('scoring',!!(cur&&r==='score'&&authUser));keepAwake(!!(cur&&r==='score'&&cur.status==='live'));app.innerHTML=r==='watch'?watchView():authUser===undefined?'<p class="muted">Checking sign-in…</p>':!authUser?loginView():cur?liveView():setupView();
  if(cur&&r==='score'){const s=$('#fpSide');if(s){if(fs)s.value=fs;fillWho();if(fw)$('#fpWho').value=fw}}}
 function fillWho(){const s=$('#fpSide').value,ps=s==='A'?cur.playersA:cur.playersB;$('#fpWho').innerHTML='<option value="">Whole team</option>'+ps.map(p=>`<option>${esc(p)}</option>`).join('')}
 app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[data-watch]');if(!b)return;const d=b.dataset;
@@ -341,10 +370,10 @@ app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[da
  else if(d.resume){cur=JSON.parse(JSON.stringify(matches.find(m=>m.id===d.resume)));confirmDel=false;render()}
  else if(d.srv){const[s,n]=d.srv.split('|');setServer(s,n)}
  else if(d.swap)swapSide(d.swap);
- else if(d.pt)point(d.pt);else if(d.minus)undo(d.minus);else if(b.id==='undo')undo();
+ else if(d.pt){point(d.pt);buzz()}else if(d.minus)undo(d.minus);else if(b.id==='undo'||b.id==='undo2'||b.id==='undo3')undo();else if(b.id==='swap3'){cur.swapped=!cur.swapped;save(cur);render()}
  else if(b.id==='swapCourt'||b.id==='ivYes'){cur.swapped=!cur.swapped;showInterval=false;save(cur);render()}
  else if(b.id==='ivNo'){showInterval=false;render()}
- else if(b.id==='finish'){cur.winner=winnerOf(cur);cur.status='done';save(cur);toast('Result saved');render()}
+ else if(b.id==='finish'||b.id==='finish2'){cur.winner=winnerOf(cur);cur.status='done';save(cur);toast('Result saved');render()}
  else if(d.fp){const side=$('#fpSide').value,who=$('#fpWho').value;cur.fp=cur.fp.concat([{id:Date.now().toString(36),side,who,kind:d.fp,pts:FP[d.fp].p,at:cur.sA+'–'+cur.sB}]);save(cur);render()}
  else if(d.fpdel){cur.fp=cur.fp.filter(f=>f.id!==d.fpdel);save(cur);render()}
  else if(b.id==='back'){cur=null;confirmDel=false;showInterval=false;render()}
