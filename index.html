@@ -278,6 +278,15 @@ input[type=color].inp{padding:4px;cursor:pointer}
 .rep-sheet h3{margin:16px 0 4px;color:#10224a}.rep-sheet td.wn{font-weight:700}.rep-note{color:#555;font-size:13px;margin:12px 0 0}.rep-foot{text-align:right;color:#888;font-size:12px;margin:8px 0 0}
 @media(max-width:600px){.hm-hero{flex-direction:column;text-align:center;padding:16px}.hm-hero img{width:190px}.hm-hero h2{font-size:34px}.hm-acts{justify-content:center}.rep-sheet{padding:12px}.rep-sheet table{font-size:12.5px}.rep-sheet th,.rep-sheet td{padding:6px 3px}.rep-top img{width:80px}.rep-top h2{font-size:22px}.rep-pod em{font-size:20px}.tie-row{grid-template-columns:40px minmax(0,1fr) 78px 42px;gap:6px}.tie-row select{padding:0 6px;font-size:15px}.tabs a,.navbtn{min-height:40px;padding:0 10px;font-size:15px}header .brand b{font-size:21px}.tabs a{flex:1 1 auto}}
 @media print{header,.noprint,#toast,.pin{display:none!important}body{background:#fff}main{padding:0;max-width:none}.rep-sheet{border:0;padding:0}.rep-pod div{break-inside:avoid}}
+.mrow .row.mem-acts{flex-wrap:wrap}.mem-acts>*{flex:1 1 auto!important}.mem-acts select{width:auto}
+.ap{border-top:1px dashed var(--line);margin:4px 0 10px;padding-top:12px}
+.ap-list{display:grid;gap:6px;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px}
+.ap-it{display:flex;align-items:center;gap:10px;min-height:44px;margin:0;font-size:16px;color:var(--ink);font-weight:600;padding:0 6px;border-radius:10px;cursor:pointer}
+.ap-it:hover{background:var(--bg)}.ap-it input{width:22px;height:22px;flex:none}.ap-it span{flex:1}.ap-it em{font-style:normal;font-size:12px;color:var(--mute);font-weight:700}
+.cred-box{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;background:var(--panel);border-radius:12px;padding:12px}.cred-box span{color:var(--mute);font-size:14px;font-weight:700}.cred-box code{font-size:22px;font-weight:700;letter-spacing:.03em}
+.mem-chips{margin-top:6px}.mem-chips .chip{border-color:var(--line);color:var(--ink)}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:500;color:var(--ink);margin:0;cursor:pointer}.consent input{width:22px;height:22px;flex:none;margin-top:1px}
+.req-ref{font-size:14px;margin-top:4px;background:light-dark(#fff6dc,#2c2510);border-radius:8px;padding:4px 8px;display:inline-block}
 
 </style>
 </head>
@@ -290,7 +299,7 @@ input[type=color].inp{padding:4px;cursor:pointer}
 <div id="toast" class="banner" hidden></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, where, getDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./config.js";
 {
@@ -435,7 +444,7 @@ function setupView(){
 function startMatch(){const n=slots(setup.tie),id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
  const pa=setup.pa.slice(0,n),pb=setup.pb.slice(0,n);
   const pos=a=>a.length===1?{R:a[0],L:a[0]}:({R:a[0],L:a[1],...(a[2]?{C:a[2]}:{})});
- cur={id,ev:EV.id,type:setup.type,court:setup.court,teamA:setup.a,teamB:setup.b,tie:setup.tie,playersA:pa,playersB:pb,target:setup.target,rule:setup.rule,
+ cur={id,ev:EV.id,...(EV.owner?{owner:EV.owner}:{}),type:setup.type,court:setup.court,teamA:setup.a,teamB:setup.b,tie:setup.tie,playersA:pa,playersB:pb,target:setup.target,rule:setup.rule,
   status:'live',sA:0,sB:0,serveTeam:null,server:null,posA:pos(pa),posB:pos(pb),swapped:false,hist:[],fp:[],winner:null,createdAt:Date.now(),startedAt:null,endedAt:null,scorer:{dev:MYDEV,name:myName||'Scorer',at:Date.now()}};
  try{localStorage.setItem('rc-setup',JSON.stringify({ev:setup.ev,type:setup.type,court:setup.court,a:setup.a,b:setup.b,tie:setup.tie,target:setup.target,rule:setup.rule}))}catch(e){}
  save(cur);render()}
@@ -569,9 +578,9 @@ function watchView(){const live=matches.filter(m=>m.status==='live').sort((a,b)=
  :loaded?`<section class="lv-hero"><h2 class="lv-h">No tie in play right now</h2><p class="muted" style="margin:0 0 10px">Scores appear here the moment the umpire starts a match.</p>${latestCard()}</section>`:''}
   ${resultsBlock(false)}</div>`}
 /* ---------- login ---------- */
-function loginView(){return `<div class="card stack" style="max-width:420px;margin:24px auto">
- <h2 style="margin:0">Organiser sign in</h2><p class="muted" style="margin:0">Only the organiser and scorers sign in. Players and fans open the live link — no account needed.</p>
- <form id="loginForm" class="stack"><div><label for="em">Email</label><input id="em" type="email" autocomplete="username" required value="${esc(loginEmail)}" style="width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:0 12px;font-size:16px"></div>
+function loginView(){if(authMode==='up')return signupView();return `<div class="card stack" style="max-width:460px;margin:24px auto">${authTabs('in')}
+ <h2 style="margin:0">Sign in</h2><p class="muted" style="margin:0">Organisers and scorers sign in. Players and fans open the live link — no account needed.</p>
+ <form id="loginForm" class="stack"><div><label for="em">Username or email</label><input id="em" type="text" autocapitalize="none" autocorrect="off" autocomplete="username" required value="${esc(loginEmail)}" style="width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:0 12px;font-size:16px"></div>
  <div><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required style="width:100%;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:0 12px;font-size:16px"></div>
  ${loginErr?`<div class="note err">${esc(loginErr)}</div>`:''}
  <button class="btn-gold btn-big" type="submit" ${loginBusy?'disabled':''}>${loginBusy?'Signing in…':'Sign in'}</button>
@@ -685,18 +694,19 @@ function parseRoute(){const h=decodeURIComponent(location.hash.replace(/^#\/?/,'
  if(p[0]==='m'&&p[1])return{v:p[2]==='score'?'mscore':'mwatch',id:p[1]};
  if(p[0]==='new')return{v:'tnew'};if(p[0]==='match')return{v:'mnew'};
  if(p[0]==='practice')return{v:p[1]==='report'?'preport':'practice'};
- if(p[0]==='guide')return{v:'guide'};if(p[0]==='signin')return{v:'signin'};
+ if(p[0]==='guide')return{v:'guide'};if(p[0]==='signin')return{v:'signin'};if(p[0]==='members')return{v:'members'};
  return{v:'home'}}
 function route(){return R.v==='tour'||R.v==='mwatch'?'watch':'score'}
-const AUTH_VIEWS=['tscore','mscore','tedit','tnew','mnew','practice','preport','signin'];
+const AUTH_VIEWS=['tscore','mscore','tedit','tnew','mnew','practice','preport','signin','members'];
 let fsdb=null,subs=[],subKey='',pauseT=null;
 function monthKey(t){const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
 let prMonth=monthKey(Date.now());
 function wantKey(){const v=R.v;
  if(v==='tour'||v==='tscore'||v==='tedit')return 'ev:'+R.id;
  if(v==='mwatch'||v==='mscore')return 'm:'+R.id;
- if(v==='practice'||v==='preport')return authUser?'pr:'+prMonth:'';
- if(v==='mnew')return authUser?'singles':'';
+ if(v==='practice'||v==='preport')return authUser?'pr:'+authUser.uid+':'+prMonth:'';
+ if(v==='mnew')return authUser?'singles:'+authUser.uid:'';
+ if(v==='members')return authUser?'members:'+authUser.uid:'';
  if(v==='home')return 'home';return ''}
 function stopListen(){subs.forEach(u=>{try{u()}catch(e){}});subs=[]}
 function listen(){if(!fsdb)return;const k=wantKey();if(k===subKey&&(subs.length||!k))return;
@@ -709,13 +719,14 @@ function listen(){if(!fsdb)return;const k=wantKey();if(k===subKey&&(subs.length|
   on(doc(fsdb,'matches',id),s=>{const d=s.exists()?s.data():null;evMissing=!d;applyEvent(d&&d.kind==='event'?d:null)});
   on(query(M,where('ev','==',id)),s=>{matches=docs(s)})}
  else if(k.startsWith('m:')){const id=k.slice(2);on(doc(fsdb,'matches',id),s=>{const d=s.exists()?s.data():null;matches=d?[d]:[];if(d)applyMatchSides(d)})}
- else if(k.startsWith('pr:')){const mo=k.slice(3);on(doc(fsdb,'matches','practice'),s=>{PR=s.exists()?s.data():null});
-  on(query(M,where('ev','==','practice'),where('month','==',mo)),s=>{matches=docs(s)})}
- else if(k==='singles')on(query(M,where('ev','==','single')),s=>{SINGLES=docs(s)});
+ else if(k.startsWith('pr:')){const[,uid,mo]=k.split(':');on(doc(fsdb,'matches','practice_'+uid),s=>{PR=s.exists()?s.data():null});
+  on(query(M,where('ev','==','practice'),where('owner','==',uid),where('month','==',mo)),s=>{matches=docs(s)})}
+ else if(k.startsWith('members:')){on(query(M,where('kind','==','event')),s=>{EVENTS=docs(s)});on(query(M,where('ev','==','single'),where('owner','==',k.slice(8))),s=>{SINGLES=docs(s)})}
+ else if(k.startsWith('singles:'))on(query(M,where('ev','==','single'),where('owner','==',k.slice(8))),s=>{SINGLES=docs(s)});
  else if(k==='home'){on(query(M,where('kind','==','event')),s=>{EVENTS=docs(s)});on(query(M,where('ev','==','single'),where('status','==','live')),s=>{SINGLES=docs(s)})}}
 function afterData(){
  if(cur&&!saving&&!pending){const fresh=matches.find(m=>m.id===cur.id);if(fresh&&(fresh.updatedAt||0)>(cur.updatedAt||0))cur=JSON.parse(JSON.stringify(fresh))}
- if(R.v==='mscore'&&!cur&&matches[0]&&authUser){cur=JSON.parse(JSON.stringify(matches[0]));if(cur.status==='live'&&(!cur.scorer||(!lockedByOther(cur)&&!isMine(cur))))claim(cur)}
+ if(R.v==='mscore'&&!cur&&matches[0]&&authUser&&canScoreMatch(matches[0])){cur=JSON.parse(JSON.stringify(matches[0]));if(cur.status==='live'&&(!cur.scorer||(!lockedByOther(cur)&&!isMine(cur))))claim(cur)}
  if(R.v==='tedit'&&EV&&(!ED||ED.id!==EV.id||!edDirty))ED=JSON.parse(JSON.stringify(EV));
  const a=document.activeElement;if(a&&app.contains(a)&&(a.tagName==='SELECT'||a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&!cur)return;render()}
 // Save free-plan reads: stop listening while the screen is hidden, reconnect when it is visible again.
@@ -729,16 +740,17 @@ function onRoute(){const prev=R;R=parseRoute();
   const sameEv=prev.id===R.id&&['tscore','tour','tedit'].includes(prev.v)&&['tscore','tour','tedit'].includes(R.v);
   if(!sameEv&&!(R.v==='mscore'&&cur&&cur.id===R.id))cur=null;
   sheet='';confirmDel=false;showInterval=false;lastMsg='';edImport=null;
-  if(R.v!=='tedit')edDirty=false;if(R.v==='tedit')ED=EV&&EV.id===R.id?JSON.parse(JSON.stringify(EV)):null;
+  if(R.v!=='tedit')edDirty=false;if(R.v==='signin')authMode='in';if(R.v==='tedit')ED=EV&&EV.id===R.id?JSON.parse(JSON.stringify(EV)):null;
   if(R.v==='tnew')NT=newNT();if(R.v==='mnew')nm=newNm();scrollTo(0,0)}
  if(R.v==='signin'&&authUser){location.hash='#';return}
  listen();render()}
 addEventListener('hashchange',onRoute);
 $('#nav').addEventListener('click',e=>{if(e.target.closest('#signout')){cur=null;signOut(auth);location.hash='#'}});
-function navRender(){const v=R.v,inT=['tour','tscore','tedit'].includes(v),admin=!!authUser;
- const a=(h,t,on)=>`<a href="${h}" class="${on?'on':''}">${t}</a>`;
- $('#nav').innerHTML=a('#','Home',v==='home'||v==='guide')+(inT?a('#t/'+R.id,'Live',v==='tour')+a('#t/'+R.id+'/score','Scorer',v==='tscore')+(admin?a('#t/'+R.id+'/edit','Edit',v==='tedit'):''):'')
-  +(admin&&!inT?a('#practice','Practice',v==='practice'||v==='preport'):'')
+function navRender(){const v=R.v,inT=['tour','tscore','tedit'].includes(v);
+ const a=(h,t,on)=>`<a href="${h}" class="${on?'on':''}">${t}</a>`;const pend=isAdmin()?REQUESTS.filter(m=>m.status==='pending').length:0;
+ $('#nav').innerHTML=a('#','Home',v==='home'||v==='guide')+(inT?a('#t/'+R.id,'Live',v==='tour')+(!authUser||!EV||canScoreEv(EV)?a('#t/'+R.id+'/score','Scorer',v==='tscore'):'')+(canEditEv(EV)?a('#t/'+R.id+'/edit','Edit',v==='tedit'):''):'')
+  +(canOrganise()&&!inT?a('#practice','Practice',v==='practice'||v==='preport'):'')
+  +(isAdmin()&&!inT?a('#members','Members'+(pend?` (${pend})`:''),v==='members'):'')
   +(authUser?'<button id="signout" class="navbtn">Sign out</button>':(AUTH_VIEWS.includes(v)?'':a('#signin','Sign in',false)));
  $('#hsub').textContent=inT&&EV?EV.name:'by TENVOX Sports'}
 function render(){const v=R.v;const fsv=$('#fpSide')?.value,fw=$('#fpWho')?.value;navRender();
@@ -750,30 +762,35 @@ function render(){const v=R.v;const fsv=$('#fpSide')?.value,fw=$('#fpWho')?.valu
  if(!AUTH_VIEWS.includes(v))html=v==='tour'?tourView():v==='mwatch'?singleWatch():v==='guide'?guideView():homeView();
  else if(authUser===undefined)html='<p class="muted">Checking sign-in…</p>';
  else if(!authUser)html=loginView();
+ else if(!isAdmin()&&!ME)html='<p class="muted">Checking your access…</p>';
+ else if(!isAdmin()&&!active())html=accessStatusView();
+ else if(!viewAllowed(v))html=noAccessView();
  else if(cur&&scoringView)html=mob?mobileLiveView():liveView();
- else html=v==='tscore'?tourScorer():v==='mscore'?(loaded?'<div class="card">Match not found. <a href="#">Home</a></div>':'<p class="muted">Loading match…</p>'):v==='tedit'?editView():v==='tnew'?newTourView():v==='mnew'?newMatchView():v==='practice'?practiceView():v==='preport'?reportView():'';
+ else html=v==='tscore'?tourScorer():v==='mscore'?(loaded?'<div class="card">Match not found. <a href="#">Home</a></div>':'<p class="muted">Loading match…</p>'):v==='tedit'?editView():v==='tnew'?newTourView():v==='mnew'?newMatchView():v==='practice'?practiceView():v==='preport'?reportView():v==='members'?membersView():'';
  app.innerHTML=html;
  if(cur&&scoringView){const s=$('#fpSide');if(s){if(fsv)s.value=fsv;fillWho();if(fw)$('#fpWho').value=fw}}}
 /* ---------- home ---------- */
 const sideName=(m,s)=>s==='A'?(m.sideA||(m.playersA||[]).join(' / ')):(m.sideB||(m.playersB||[]).join(' / '));
-function homeView(){const admin=!!authUser;
+function homeView(){const admin=canOrganise();const pend=isAdmin()?REQUESTS.filter(m=>m.status==='pending').length:0;
  const evs=EVENTS.filter(e=>e.type==='tournament').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
  const st=e=>e.estatus==='completed'?'<span class="pill">Completed</span>':e.estatus==='live'?'<span class="pill onair">● Live</span>':'<span class="pill gold">Upcoming</span>';
  const liveS=SINGLES.filter(m=>m.status==='live');
  return `<div class="stack">
  <section class="hm-hero"><img src="tenvox-logo.jpg" alt="TENVOX Sports"><div><h2>ShuttleBook</h2><p>Live badminton scoring for tournaments, matches and daily practice — right in your phone's browser. No app to install.</p>
-  ${admin?`<div class="hm-acts"><a class="hbtn gold" href="#new">＋ New tournament</a><a class="hbtn" href="#match">＋ New match</a><a class="hbtn" href="#practice">🏸 Daily practice</a></div>`:`<div class="hm-acts"><a class="hbtn gold" href="#guide">How it works</a><a class="hbtn" href="#signin">Organiser sign in</a></div>`}</div></section>
+  ${admin?`<div class="hm-acts"><a class="hbtn gold" href="#new">＋ New tournament</a><a class="hbtn" href="#match">＋ New match</a><a class="hbtn" href="#practice">🏸 Daily practice</a>${isAdmin()?`<a class="hbtn" href="#members">👥 Members${pend?` · ${pend} new`:''}</a>`:''}</div>`:authUser?`<div class="hm-acts"><a class="hbtn gold" href="#guide">How it works</a></div>`:`<div class="hm-acts"><a class="hbtn gold" href="#guide">How it works</a><a class="hbtn" href="#signin">Sign in / Request access</a></div>`}</div></section>
+ ${authUser&&!isAdmin()&&ME&&!active()?'<div class="note">This login is not active. Please contact the TENVOX admin.</div>':''}
+ ${authUser&&!isAdmin()?myItemsCard():''}
  ${loadNote?`<div class="note err">${esc(loadNote)}</div>`:''}
  ${liveS.length?`<div class="card"><h2 style="margin:0 0 4px">Live matches</h2>${liveS.map(m=>`<a class="hm-row" href="#m/${m.id}"><span class="pill onair">● LIVE</span><b>${esc(m.name||'Match')}</b><span class="num hm-sc">${m.sA}–${m.sB}</span><span class="muted">${esc(sideName(m,'A'))} vs ${esc(sideName(m,'B'))}</span></a>`).join('')}</div>`:''}
  <section><h2 style="margin:6px 0 10px">Tournaments</h2>${evs.length?`<div class="hm-grid">${evs.map(e=>`<a class="hm-card" href="#t/${e.id}">${e.poster?`<img class="hm-poster" src="${e.poster}" alt="">`:`<div class="hm-noposter">${e.logo?`<img src="${e.logo}" alt="">`:'🏸'}</div>`}<div class="hm-info">${st(e)}<b>${esc(e.name)}</b><span>${esc([e.dates,e.venue].filter(Boolean).join(' · '))}</span><span>${(e.teams||[]).length} teams</span></div></a>`).join('')}</div>`:loaded?`<p class="muted">No tournaments yet.${admin?' Tap ＋ New tournament to register one.':''}</p>`:'<p class="muted">Loading…</p>'}</section>
  ${guideBlock(false)}
  </div>`}
 function guideBlock(open){const S={
- t:['Sign in as the organiser (tap <b>Sign in</b> at the top).','Tap <b>＋ New tournament</b>. Enter the name, organiser, venue and dates, and add the tournament poster and logo. Tap <b>Create tournament</b>.','Add the teams and players: type them in under <b>Teams &amp; players</b>, or tap <b>Download Excel template</b>, fill it in (Team, Player, Gender) and tap <b>Upload Excel</b>.','Set the <b>tie format</b>: the category and points for each tie. Tap <b>Save</b>.','Share the tournament <b>live link</b> with players and fans.','On match day, open <b>Scorer</b>, choose the two teams, the tie and the players, then tap <b>Start match</b>.'],
+ t:['Sign in as the organiser (tap <b>Sign in</b> at the top). New here? Tap <b>Request access</b>; the admin sends your username and password on WhatsApp.','Tap <b>＋ New tournament</b>. Enter the name, organiser, venue and dates, and add the tournament poster and logo. Tap <b>Create tournament</b>.','Add the teams and players: type them in under <b>Teams &amp; players</b>, or tap <b>Download Excel template</b>, fill it in (Team, Player, Gender) and tap <b>Upload Excel</b>.','Set the <b>tie format</b>: the category and points for each tie. Tap <b>Save</b>.','Share the tournament <b>live link</b> with players and fans.','On match day, open <b>Scorer</b>, choose the two teams, the tie and the players, then tap <b>Start match</b>.'],
  m:['Sign in as the organiser.','Tap <b>＋ New match</b>.','Give the match a name (e.g. “Sunday Smash Final”), choose singles or doubles and type the player names.','Choose the points (11, 15, 21 or 30) and tap <b>Start match</b>.','Tap the player who serves first, then tap <b>+1</b> for the side that wins each rally.','Share the live link during play, and the result poster when it ends.'],
  p:['Sign in and tap <b>Daily practice</b>.','Add your regular players once. Weight is optional and makes the calorie estimate personal.','Tap <b>Start practice match</b>, pick the players and score it.','At month end, open <b>Monthly report</b> and download it as Excel or PDF, with the calories burned by each player.']};
  const blk=(t,arr)=>`<details class="gd" ${open?'open':''}><summary>${t}</summary><ol>${arr.map(s=>`<li>${s}</li>`).join('')}</ol></details>`;
- return `<div class="card"><h2 style="margin:0 0 4px">How to register &amp; score</h2><p class="muted" style="margin:0 0 6px">Only the organiser signs in. Players and fans just open the live link — no app, no login.</p>${blk('🏆 Register a tournament',S.t)}${blk('🏸 Register an individual match',S.m)}${blk('🔥 Daily practice &amp; monthly report',S.p)}</div>`}
+ return `<div class="card"><h2 style="margin:0 0 4px">How to register &amp; score</h2><p class="muted" style="margin:0 0 6px">Only organisers and approved scorers sign in. Players and fans just open the live link — no app, no login.</p>${blk('🏆 Register a tournament',S.t)}${blk('🏸 Register an individual match',S.m)}${blk('🔥 Daily practice &amp; monthly report',S.p)}</div>`}
 function guideView(){return `<div class="stack">${guideBlock(true)}</div>`}
 /* ---------- tournament: live view & scorer ---------- */
 function tourView(){if(!EV)return !loaded?'<p class="muted">Loading tournament…</p>':R.id===LEGACY_ID?'<div class="card"><h2 style="margin:0">Rajyotsava Cup is moving to ShuttleBook</h2><p class="muted">The scores will be back in a few minutes. Please refresh this page shortly.</p></div>':`<div class="card"><h2 style="margin:0">Tournament not found</h2><p class="muted">The link may be wrong. <a href="#">Go to home</a></p></div>`;
@@ -814,7 +831,7 @@ function editView(){if(!ED)return loaded?'<div class="card">Tournament not found
   <button data-x="addtie">＋ Add tie</button></div>
  <div class="card stack"><h2 style="margin:0">4 · Share &amp; score</h2><div class="sharebox"><code>${esc(link)}</code><button data-x="copylink:${esc(link)}">📋 Copy live link</button></div>
   <div class="row"><a class="hbtn" href="#t/${o.id}">Open live view</a><a class="hbtn gold" href="#t/${o.id}/score">Open scorer</a></div>
-  <button data-x="tdel" class="dangerbtn">${confirmDel?'Tap again to delete the tournament and all its scores':'Delete tournament'}</button></div>
+  ${canDeleteEv(o)?'':'<!--'}<button data-x="tdel" class="dangerbtn">${confirmDel?'Tap again to delete the tournament and all its scores':'Delete tournament'}</button>${canDeleteEv(o)?'':'-->'}</div>
  </div>`}
 function teamEditor(t,i,locked){const p=t.p||[],m=p.filter(x=>x.g==='M').length,f=p.filter(x=>x.g==='F').length;
  return `<details class="tm-ed" ${edOpenTeam===i?'open':''} data-tm="${i}"><summary><span class="tm-dot" style="background:${esc(t.c)}"></span><b>${esc(t.n||'New team')}</b><span class="muted">${esc(t.k)} · ${p.length} players${m||f?` (${m} M, ${f} F)`:''}</span></summary>
@@ -876,7 +893,7 @@ function matchRow(m){const w=m.winner?sideName(m,m.winner):'';const link=BASE+'#
 function createMatch(o){const id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
  const pos=a=>a.length===1?{R:a[0],L:a[0]}:{R:a[0],L:a[1]};
  const m={id,ev:o.ev,kind:'match',name:o.name,cat:o.cat,sideA:o.sideA||'',sideB:o.sideB||'',type:'Match',court:o.court||'',teamA:'A',teamB:'B',tie:1,playersA:o.pa,playersB:o.pb,target:o.target,rule:o.rule,
-  status:'live',sA:0,sB:0,serveTeam:null,server:null,posA:pos(o.pa),posB:pos(o.pb),swapped:false,hist:[],fp:[],winner:null,createdAt:Date.now(),startedAt:null,endedAt:null,scorer:{dev:MYDEV,name:myName||'Scorer',at:Date.now()}};
+  status:'live',sA:0,sB:0,serveTeam:null,server:null,posA:pos(o.pa),posB:pos(o.pb),swapped:false,hist:[],fp:[],winner:null,createdAt:Date.now(),startedAt:null,endedAt:null,owner:authUser.uid,scorer:{dev:MYDEV,name:myName||'Scorer',at:Date.now()}};
  if(o.month)m.month=o.month;applyMatchSides(m);cur=m;save(m);location.hash='#m/'+id+'/score'}
 function sideBlk(m,s){const T=team(s==='A'?m.teamA:m.teamB),P=s==='A'?m.playersA:m.playersB;return `<div class="lv-t ${s==='B'?'r':''}"><div><b>${esc(T.n)}</b>${T.n!==P.join(' / ')?`<span>${P.map(esc).join(' / ')}</span>`:''}</div></div>`}
 function singleWatch(){const m=matches[0];if(!m)return loaded?`<div class="card"><h2 style="margin:0">Match not found</h2><p class="muted"><a href="#">Go to home</a></p></div>`:'<p class="muted">Loading match…</p>';
@@ -888,7 +905,7 @@ function singleWatch(){const m=matches[0];if(!m)return loaded?`<div class="card"
 let pf={cat:'OS',pa:['',''],pb:['',''],target:21};
 const monthLabel=k=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'})};
 const dLabel=t=>new Date(t||Date.now()).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-async function savePR(players){PR={id:'practice',kind:'practice',players,updatedAt:Date.now()};render();try{await db.doc('matches/practice').set(JSON.parse(JSON.stringify(PR)))}catch(e){toast('Could not save the player list')}}
+async function savePR(players){PR={id:'practice_'+authUser.uid,kind:'practice',owner:authUser.uid,players,updatedAt:Date.now()};render();try{await db.doc('matches/'+PR.id).set(JSON.parse(JSON.stringify(PR)))}catch(e){toast('Could not save the player list')}}
 function practiceView(){const roster=(PR&&PR.players)||[];const n=SLOTS(pf.cat);
  const live=matches.filter(m=>m.status==='live'),done=matches.filter(m=>m.status==='done').sort((a,b)=>(b.endedAt||b.updatedAt||0)-(a.endedAt||a.updatedAt||0));
  const taken=[...pf.pa.slice(0,n),...pf.pb.slice(0,n)];
@@ -983,7 +1000,7 @@ app.addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!
  case 'rmimg':if(F){F[arg]='';if(R.v==='tedit')edDirty=true;render()}break;
  case 'copylink':try{await navigator.clipboard.writeText(arg);toast('Live link copied')}catch(err){toast(arg)}break;
  case 'tcreate':{const nmv=String(NT.name||'').trim();if(!nmv){toast('Enter the tournament name');$('#f_name')?.focus();break}
-  const id=slugify(nmv)+'-'+Math.random().toString(36).slice(2,6);const ev={...NT,name:nmv,id,kind:'event',type:'tournament',teams:[],ties:RJ_TIES.map(t=>({...t})),createdAt:Date.now()};
+  const id=slugify(nmv)+'-'+Math.random().toString(36).slice(2,6);const ev={...NT,name:nmv,id,kind:'event',type:'tournament',teams:[],ties:RJ_TIES.map(t=>({...t})),createdAt:Date.now(),...(isAdmin()?{}:{owner:authUser.uid})};
   b.disabled=true;if(await saveEvent(ev)){applyEvent(ev);ED=JSON.parse(JSON.stringify(ev));edDirty=false;toast('Tournament created — now add the teams');location.hash='#t/'+id+'/edit'}else b.disabled=false;break}
  case 'tsave':{const err=validateEvent(ED);if(err){toast(err);break}edBusy=true;render();const ok=await saveEvent(ED);edBusy=false;if(ok){edDirty=false;for(const t of ED.teams||[])delete t._auto;toast('Saved')}render();break}
  case 'tdel':if(!confirmDel){confirmDel=true;render();setTimeout(()=>{if(confirmDel){confirmDel=false;render()}},5000)}else{confirmDel=false;const id=ED.id;const ids=matches.map(m=>m.id);edDirty=false;
@@ -1039,6 +1056,122 @@ app.addEventListener('keydown',e=>{if(e.key!=='Enter')return;const id=e.target.i
  else if(id==='newPn'||id==='newPw'){e.preventDefault();document.querySelector('[data-x="addpp"]')?.click()}});
 addEventListener('beforeunload',e=>{if(edDirty){e.preventDefault();e.returnValue=''}});
 
+/* ---------- access requests, auto-generated logins & assignments ---------- */
+let ME=null,MEMBERS=[],REQUESTS=[],memUnsubs=[],authMode='in',suBusy=false,suErr='',suSent=false,SU={want:'scorer'};
+let AP=null,CRED=null,apBusy=false; // AP: approve/assign panel state; CRED: login just created (shown once)
+const USER_DOMAIN='tenvox.example.com';
+const toLoginEmail=u=>{u=String(u||'').trim().toLowerCase();return u.includes('@')?u:u+'@'+USER_DOMAIN};
+const isAdmin=()=>!!(authUser&&ADMIN_EMAILS.includes(authUser.email));
+const active=()=>!!(ME&&ME.status==='approved');
+const myRole=()=>isAdmin()?'admin':active()?ME.role:'';
+const assignedTo=id=>active()&&(ME.assigned||[]).includes(id);
+const canOrganise=()=>isAdmin()||myRole()==='organiser';
+const canEditEv=e=>!!e&&(isAdmin()||(!!authUser&&!!e.owner&&e.owner===authUser.uid&&canOrganise())||assignedTo(e.id));
+const canDeleteEv=e=>!!e&&(isAdmin()||(!!authUser&&!!e.owner&&e.owner===authUser.uid&&canOrganise()));
+const canScoreEv=e=>canEditEv(e);
+const canScoreMatch=m=>!!m&&(isAdmin()||(isTour(m)?!!EV&&canScoreEv(EV):(!!authUser&&m.owner===authUser.uid&&canOrganise())||assignedTo(m.id)));
+const ROLE_NAME={organiser:'Organiser',scorer:'Scorer'};
+function watchMember(){memUnsubs.forEach(u=>{try{u()}catch(e){}});memUnsubs=[];ME=null;MEMBERS=[];REQUESTS=[];if(!authUser||!fsdb)return;
+ if(isAdmin()){memUnsubs.push(onSnapshot(collection(fsdb,'members'),s=>{MEMBERS=s.docs.map(d=>d.data()).filter(Boolean);render()},()=>{}));
+  memUnsubs.push(onSnapshot(collection(fsdb,'requests'),s=>{REQUESTS=s.docs.map(d=>d.data()).filter(Boolean);render()},()=>{}))}
+ else memUnsubs.push(onSnapshot(doc(fsdb,'members',authUser.uid),s=>{ME=s.exists()?s.data():{status:'none'};render()},()=>{ME={status:'none'};render()}))}
+function viewAllowed(v){
+ if(['tnew','mnew','practice','preport'].includes(v))return canOrganise();
+ if(v==='members')return isAdmin();
+ if(v==='tedit'||v==='tscore')return !EV||canEditEv(EV);
+ if(v==='mscore')return !matches[0]||canScoreMatch(matches[0]);
+ return true}
+function noAccessView(){const v=R.v;const msg=v==='tscore'||v==='tedit'?'This tournament is not assigned to your ID.':v==='mscore'?'This match is not assigned to your ID.':v==='members'?'Only the TENVOX admin manages members.':'Your ID is a scorer ID: it controls only the tournaments and matches assigned to it.';
+ return `<div class="card stack" style="max-width:520px;margin:24px auto"><h2 style="margin:0">No access</h2><p style="margin:0">${msg}</p><p class="muted" style="margin:0">Signed in as ${esc(ME&&ME.username||authUser.email)}${myRole()&&myRole()!=='admin'?' · '+ROLE_NAME[myRole()]:''}.</p><a class="hbtn" href="#">Go to home</a></div>`}
+function accessStatusView(){return `<div class="card stack" style="max-width:520px;margin:24px auto"><h2 style="margin:0">Login not active</h2><p style="margin:0">${ME&&ME.status==='disabled'?'This login has been switched off by the TENVOX admin.':'This account has no ShuttleBook access yet.'} Please contact the TENVOX admin.</p><p class="muted" style="margin:0">Live views stay open to everyone.</p></div>`}
+function myItemsCard(){if(!active())return '';const ids=ME.assigned||[],names=ME.assignedNames||{};
+ const role=ME.role==='organiser'?'Organiser — you can also create your own tournaments, matches and practice.':'Scorer';
+ return `<div class="card"><h2 style="margin:0 0 2px">Assigned to you</h2><p class="muted" style="margin:0 0 4px">Logged in as <b>${esc(ME.username||'')}</b> · ${role}</p>${ids.length?ids.map(id=>{const t=EVENTS.find(e=>e.id===id);const tour=!!t||names[id]&&names[id].t==='t';const nm=t?t.name:(names[id]&&names[id].n)||id;
+  return `<div class="mrow"><div><b>${esc(nm)}</b><div class="muted">${tour?'Tournament':'Match'}</div></div><div class="row">${tour?`<a class="hbtn" href="#t/${id}">Live</a><a class="hbtn gold" href="#t/${id}/score">Score</a><a class="hbtn" href="#t/${id}/edit">Edit</a>`:`<a class="hbtn" href="#m/${id}">Live</a><a class="hbtn gold" href="#m/${id}/score">Score</a>`}</div></div>`}).join(''):'<p class="muted" style="margin:0">Nothing assigned yet. The admin will assign your tournaments or matches.</p>'}</div>`}
+function authTabs(on){return `<div class="seg"><button type="button" class="${on==='in'?'on':''}" data-x="amode:in">Sign in</button><button type="button" class="${on==='up'?'on':''}" data-x="amode:up">Request access</button></div>`}
+function signupView(){if(suSent)return `<div class="card stack" style="max-width:460px;margin:24px auto">${authTabs('up')}<h2 style="margin:0">Request sent ✓</h2><p style="margin:0">Thank you! Once the TENVOX admin approves it, you'll receive your <b>username and password on WhatsApp</b>. Then come back here and sign in.</p><button data-x="amode:in">Go to sign in</button></div>`;
+ const f=(id,l,t,ac,ph,req)=>`<div><label for="${id}">${l}</label><input class="inp" id="${id}" type="${t}" autocomplete="${ac}" placeholder="${ph}" value="${esc(SU[id]||'')}" ${req?'required':''}></div>`;
+ return `<div class="card stack" style="max-width:460px;margin:24px auto">${authTabs('up')}
+ <h2 style="margin:0">Request access</h2><p class="muted" style="margin:0">Send your details. After approval the TENVOX admin sends you a <b>username and password</b> on WhatsApp.</p>
+ <form id="signupForm" class="stack">${f('suName','Full name *','text','name','e.g. Rahul Menon',1)}${f('suPhone','WhatsApp number *','tel','tel','10-digit mobile',1)}${f('suEmail','Email (optional)','email','email','you@example.com',0)}
+ <div class="grid2">${f('suCity','City / town *','text','address-level2','e.g. Kochi',1)}${f('suClub','Club / organisation (optional)','text','organization','e.g. AURA Badminton Club',0)}</div>
+ <div><label for="suHeard">How did you hear about ShuttleBook? *</label><select id="suHeard" class="inp" required>${['','Friend / colleague','Played in a tournament scored on ShuttleBook','WhatsApp group','Social media','Other'].map(o=>`<option value="${o}" ${SU.suHeard===o?'selected':''}>${o||'Choose one'}</option>`).join('')}</select></div>
+ <div class="grid2">${f('suRef','Referred by (name) *','text','off','Who told you about it',1)}${f('suRefPhone','Referrer\'s mobile (optional)','tel','off','Helps us verify',0)}</div>
+ <div><label>I'd like to</label><div class="seg">${[['scorer','Score matches'],['organiser','Organise my own events']].map(([k,l])=>`<button type="button" data-x="suwant:${k}" class="${SU.want===k?'on':''}">${l}</button>`).join('')}</div></div>
+ <label class="consent"><input type="checkbox" id="suOk" ${SU.suOk?'checked':''} required> <span>I agree that TENVOX Sports may use these details only to review my request and send my login on WhatsApp. I can ask for them to be deleted at any time.</span></label>
+ ${suErr?`<div class="note err">${esc(suErr)}</div>`:''}<button class="btn-gold btn-big" type="submit" ${suBusy?'disabled':''}>${suBusy?'Sending…':'Send request'}</button>
+ <p class="muted" style="margin:0;font-size:13px">We never ask for ID numbers, date of birth or address. Details are seen only by the TENVOX admin.</p></form></div>`}
+/* credentials */
+const pick=(s,n)=>Array.from(crypto.getRandomValues(new Uint32Array(n)),x=>s[x%s.length]).join('');
+function genPassword(){return pick('bcdfghjkmnprstvwz',1)+pick('aeiou',1)+pick('bcdfghjkmnprstvwz',1)+pick('aeiou',1)+pick('bcdfghjkmnprstvwz',1)+pick('aeiou',1)+'-'+pick('23456789',4)}
+function genUsername(name){const base=(String(name||'member').toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]/g,'').trim().split(/\s+/)[0]||'member').slice(0,12);
+ const taken=new Set(MEMBERS.map(m=>m.username));let u;do{u=base+pick('23456789',2)}while(taken.has(u));return u}
+let auth2=null;function creatorAuth(){if(!auth2)auth2=getAuth(initializeApp(firebaseConfig,'tvx-creator'));return auth2}
+async function createLogin(username,password){const c=await createUserWithEmailAndPassword(creatorAuth(),toLoginEmail(username),password);const uid=c.user.uid;try{await signOut(creatorAuth())}catch(e){}return uid}
+function assignables(){const evs=EVENTS.filter(e=>e.type==='tournament').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(e=>({id:e.id,n:e.name,t:'t'}));
+ const ms=SINGLES.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(m=>({id:m.id,n:m.name||'Match',t:'m'}));return evs.concat(ms)}
+function apPanel(){const a=AP,items=assignables();
+ return `<div class="ap stack"><div class="grid2"><div><label for="apUser">Username</label><input class="inp" id="apUser" value="${esc(a.username)}" ${a.mode==='edit'?'disabled':''}></div>
+ <div><label>Role</label><div class="seg">${Object.entries(ROLE_NAME).map(([k,l])=>`<button data-x="aprole:${k}" class="${a.role===k?'on':''}">${l}</button>`).join('')}</div></div></div>
+ ${a.mode!=='edit'?`<div class="grid2"><div><label for="apName">Name</label><input class="inp" id="apName" value="${esc(a.name)}"></div><div><label for="apPhone">WhatsApp number</label><input class="inp" id="apPhone" value="${esc(a.phone)}" inputmode="tel"></div></div>`:''}
+ <div><label>Tournaments &amp; matches this ID controls</label>${items.length?`<div class="ap-list">${items.map(it=>`<label class="ap-it"><input type="checkbox" data-apa="${it.id}" ${a.assigned.includes(it.id)?'checked':''}> <span>${esc(it.n)}</span> <em>${it.t==='t'?'Tournament':'Match'}</em></label>`).join('')}</div>`:'<p class="muted" style="margin:0">No tournaments or matches yet.</p>'}</div>
+ <p class="muted" style="margin:0">${a.role==='organiser'?'Organiser: controls the ticked items and can create their own tournaments, matches and practice.':'Scorer: controls only the ticked items (score and edit).'}</p>
+ <div class="row"><button class="btn-gold" data-x="apgo" ${apBusy?'disabled':''}>${apBusy?'Working…':a.mode==='edit'?'Save changes':'Create login & approve'}</button><button data-x="apcancel">Cancel</button></div></div>`}
+function credCard(){const c=CRED;const msg=`🏸 *TENVOX ShuttleBook* — your login is ready!\n\n👤 Username: *${c.username}*\n🔑 Password: *${c.password}*\n\nSign in here 👉 ${BASE}#signin\nYour tournaments and matches appear on the home page after you sign in.`;
+ const ph=String(c.phone||'').replace(/\D/g,'');const wa='https://wa.me/'+(ph?(ph.length===10?'91'+ph:ph):'')+'?text='+encodeURIComponent(msg);
+ return `<div class="note cred stack"><b>Login created for ${esc(c.name||c.username)} ✓</b><div class="cred-box"><span>Username</span><code>${esc(c.username)}</code><span>Password</span><code>${esc(c.password)}</code></div>
+ <p class="muted" style="margin:0">The password is shown only now. Send it before closing this box.</p>
+ <div class="row"><a class="hbtn gold" href="${wa}" target="_blank" rel="noopener">💬 Send on WhatsApp</a><button data-x="credcopy">📋 Copy</button><button data-x="credclose">Done</button></div><textarea id="credMsg" hidden>${esc(msg)}</textarea></div>`}
+function membersView(){const pend=REQUESTS.filter(r=>r.status==='pending').sort((a,b)=>(b.at||0)-(a.at||0));const mem=MEMBERS.slice().sort((a,b)=>(a.status==='approved'?0:1)-(b.status==='approved'?0:1)||(b.at||0)-(a.at||0));
+ const names=id=>{const it=assignables().find(x=>x.id===id);return it?it.n:((MEMBERS.find(m=>(m.assignedNames||{})[id])||{}).assignedNames||{})[id]?.n||id};
+ const panelFor=key=>AP&&AP.key===key?apPanel():'';
+ return `<div class="stack"><div class="pr-head"><div><h2 style="margin:0">Members</h2><span class="muted">Approve requests, create logins and assign tournaments &amp; matches.</span></div><button class="btn-gold" data-x="apnew">＋ Add member</button></div>
+ ${CRED?credCard():''}${panelFor('new')?`<div class="card stack"><h3 style="margin:0">New member</h3>${panelFor('new')}</div>`:''}
+ <div class="card"><h3 style="margin:0 0 4px">Requests waiting (${pend.length})</h3>${pend.length?pend.map(r=>`<div class="mrow"><div><b>${esc(r.name)}</b> <span class="pill">${r.want==='organiser'?'Wants to organise':'Wants to score'}</span><div class="muted">📱 ${esc(r.phone||'')}${r.email?' · '+esc(r.email):''}${r.city?' · 📍 '+esc(r.city):''}${r.club?' · '+esc(r.club):''}</div><div class="req-ref">🔎 Referred by <b>${esc(r.ref||'—')}</b>${r.refPhone?` (<a href="tel:${esc(r.refPhone)}">${esc(r.refPhone)}</a>)`:''}${r.heard?' · '+esc(r.heard):''} · ${new Date(r.at||Date.now()).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div></div><div class="row mem-acts"><button class="btn-gold" data-x="approve:${r.id}">Approve</button><button class="dangerbtn" data-x="reqrej:${r.id}">Reject</button></div></div>${panelFor('r:'+r.id)}`).join(''):'<p class="muted" style="margin:0">No new requests.</p>'}</div>
+ <div class="card"><h3 style="margin:0 0 4px">Member IDs (${mem.length})</h3>${mem.length?mem.map(m=>`<div class="mrow"><div><b>${esc(m.name||m.username)}</b> ${m.status!=='approved'?'<span class="pill">Off</span>':''}<div class="muted">👤 ${esc(m.username)} · ${ROLE_NAME[m.role]||''}${m.phone?' · '+esc(m.phone):''}${m.city?' · '+esc(m.city):''}${m.ref?' · ref: '+esc(m.ref):''}</div><div class="chips mem-chips">${(m.assigned||[]).map(id=>`<span class="chip">${esc(names(id))}</span>`).join('')||'<span class="muted" style="font-size:13px">Nothing assigned</span>'}</div></div>
+  <div class="row mem-acts">${m.status==='approved'?`<button class="btn-gold" data-x="apedit:${m.uid}">Assign / role</button><button data-x="reissue:${m.uid}">Issue new login</button><button class="dangerbtn" data-x="mdisable:${m.uid}">Switch off</button>`:`<button data-x="menable:${m.uid}">Switch on</button>`}</div></div>${panelFor('m:'+m.uid)}`).join(''):'<p class="muted" style="margin:0">No member IDs yet.</p>'}</div>
+ <p class="muted" style="margin:0">Members sign in with their username and password. Organisers can also create their own events; scorers control only what you assign.</p></div>`}
+async function apSave(){const a=AP;a.username=String(($('#apUser')||{}).value||a.username).trim().toLowerCase();if($('#apName'))a.name=$('#apName').value.trim();if($('#apPhone'))a.phone=$('#apPhone').value.trim();
+ if(a.mode!=='edit'&&!/^[a-z0-9._-]{3,30}$/.test(a.username)){toast('Username: 3–30 letters or numbers, no spaces');return}
+ if(a.mode!=='edit'&&MEMBERS.some(m=>m.username===a.username)){toast('That username is already used');return}
+ if(a.mode!=='edit'&&!a.name){toast('Enter the name');return}
+ const its=assignables(),aNames={};for(const id of a.assigned){const it=its.find(x=>x.id===id);aNames[id]={n:it?it.n:id,t:it?it.t:'t'}}
+ apBusy=true;render();
+ try{if(a.mode==='edit'){const m=MEMBERS.find(x=>x.uid===a.uid);await setDoc(doc(fsdb,'members',a.uid),JSON.parse(JSON.stringify({...m,role:a.role,assigned:a.assigned,assignedNames:aNames,updatedAt:Date.now()})));toast('Saved');AP=null}
+  else{const password=genPassword();const uid=await createLogin(a.username,password);
+   await setDoc(doc(fsdb,'members',uid),JSON.parse(JSON.stringify({uid,username:a.username,name:a.name,phone:a.phone,email:a.email||'',city:a.city||'',club:a.club||'',ref:a.ref||'',role:a.role,assigned:a.assigned,assignedNames:aNames,status:'approved',at:Date.now(),reqId:a.reqId||'',replaces:a.replaces||''})));
+   if(a.replaces){const old=MEMBERS.find(x=>x.uid===a.replaces);if(old)await setDoc(doc(fsdb,'members',old.uid),{...old,status:'disabled',replacedBy:uid,updatedAt:Date.now()})}
+   if(a.reqId){const r=REQUESTS.find(x=>x.id===a.reqId);if(r)await setDoc(doc(fsdb,'requests',r.id),{...r,status:'approved',uid,decidedAt:Date.now()})}
+   CRED={username:a.username,password,name:a.name,phone:a.phone};AP=null}}
+ catch(err){toast(err.code==='auth/email-already-in-use'?'That username is already taken — change it':'Could not complete ('+(err.code||err.message||'error')+')')}
+ apBusy=false;render()}
+app.addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!b)return;const[act,...rest]=b.dataset.x.split(':');const arg=rest.join(':');
+ const keepTicks=()=>{if(AP)AP.assigned=[...document.querySelectorAll('[data-apa]')].filter(x=>x.checked).map(x=>x.dataset.apa);if(AP&&$('#apUser')&&AP.mode!=='edit')AP.username=$('#apUser').value;if(AP&&$('#apName'))AP.name=$('#apName').value;if(AP&&$('#apPhone'))AP.phone=$('#apPhone').value};
+ if(act==='amode'){authMode=arg;suErr='';loginErr='';if(arg==='up')suSent=false;if(arg==='in'&&location.hash!=='#signin')location.hash='#signin';render()}
+ else if(act==='suwant'){SU.want=arg;render()}
+ else if(act==='apnew'){CRED=null;AP={key:'new',mode:'new',username:'',name:'',phone:'',role:'scorer',assigned:[]};render();setTimeout(()=>$('#apName')?.focus(),30)}
+ else if(act==='approve'){const r=REQUESTS.find(x=>x.id===arg);if(!r)return;CRED=null;AP={key:'r:'+r.id,mode:'new',reqId:r.id,username:genUsername(r.name),name:r.name,phone:r.phone||'',email:r.email||'',city:r.city||'',club:r.club||'',ref:r.ref?r.ref+(r.refPhone?' ('+r.refPhone+')':''):'',role:r.want==='organiser'?'organiser':'scorer',assigned:[]};render()}
+ else if(act==='apedit'){const m=MEMBERS.find(x=>x.uid===arg);if(!m)return;CRED=null;AP={key:'m:'+m.uid,mode:'edit',uid:m.uid,username:m.username,role:m.role||'scorer',assigned:(m.assigned||[]).slice()};render()}
+ else if(act==='reissue'){const m=MEMBERS.find(x=>x.uid===arg);if(!m)return;CRED=null;AP={key:'m:'+m.uid,mode:'new',replaces:m.uid,username:genUsername(m.name||m.username),name:m.name||'',phone:m.phone||'',email:m.email||'',role:m.role||'scorer',assigned:(m.assigned||[]).slice()};render()}
+ else if(act==='aprole'){keepTicks();AP.role=arg;render()}
+ else if(act==='apcancel'){AP=null;render()}
+ else if(act==='apgo'){keepTicks();if(!$('#apUser')&&AP.mode!=='edit'){toast('Enter a username');return}apSave()}
+ else if(act==='credcopy'){try{await navigator.clipboard.writeText($('#credMsg').value);toast('Login details copied')}catch(err){toast('Copy not allowed here')}}
+ else if(act==='credclose'){CRED=null;render()}
+ else if(act==='reqrej'){const r=REQUESTS.find(x=>x.id===arg);if(r)try{await setDoc(doc(fsdb,'requests',r.id),{...r,status:'rejected',decidedAt:Date.now()});toast('Request rejected')}catch(err){toast('Could not update')}}
+ else if(act==='mdisable'||act==='menable'){const m=MEMBERS.find(x=>x.uid===arg);if(m)try{await setDoc(doc(fsdb,'members',m.uid),{...m,status:act==='mdisable'?'disabled':'approved',updatedAt:Date.now()});toast(act==='mdisable'?'Login switched off':'Login switched on')}catch(err){toast('Could not update')}}});
+app.addEventListener('input',e=>{const id=e.target.id||'';if(/^su(Name|Phone|Email|City|Club|Ref|RefPhone|Heard)$/.test(id))SU[id]=e.target.value;if(id==='suOk')SU.suOk=e.target.checked});
+app.addEventListener('change',e=>{const id=e.target.id||'';if(id==='suHeard')SU.suHeard=e.target.value;if(id==='suOk')SU.suOk=e.target.checked});
+app.addEventListener('submit',async e=>{if(e.target.id!=='signupForm')return;e.preventDefault();
+ const T=(k,n)=>String(SU[k]||'').trim().slice(0,n);const name=T('suName',60),phone=String(SU.suPhone||'').replace(/[^\d+]/g,'').slice(0,16),email=T('suEmail',80),city=T('suCity',40),club=T('suClub',60),heard=T('suHeard',60),ref=T('suRef',60),refPhone=String(SU.suRefPhone||'').replace(/[^\d+]/g,'').slice(0,16);
+ if(!name||phone.replace(/\D/g,'').length<10){suErr='Enter your full name and a valid WhatsApp number.';render();return}
+ if(!city||!heard||!ref){suErr='Please fill in your city, how you heard about ShuttleBook and who referred you.';render();return}
+ if(!$('#suOk').checked){suErr='Please tick the consent box to send the request.';render();return}
+ suBusy=true;suErr='';render();
+ try{const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);await setDoc(doc(fsdb,'requests',id),{id,name,phone,email,city,club,heard,ref,refPhone,want:SU.want==='organiser'?'organiser':'scorer',consentAt:Date.now(),status:'pending',at:Date.now()});suSent=true;SU={want:'scorer'}}
+ catch(err){suErr='Could not send the request ('+(err.code||'error')+'). Please try again later.'}
+ suBusy=false;render()});
+
 /* ---------- render + events ---------- */
 function buzz(){try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}}
 let wake=null;async function keepAwake(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
@@ -1078,7 +1211,7 @@ let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(
 render();
 /* ---------- Firebase ---------- */
 app.addEventListener('submit',async e=>{if(e.target.id!=='loginForm')return;e.preventDefault();loginEmail=$('#em').value.trim();const pw=$('#pw').value;loginBusy=true;loginErr='';render();
- try{await signInWithEmailAndPassword(auth,loginEmail,pw)}catch(err){
+ try{await signInWithEmailAndPassword(auth,toLoginEmail(loginEmail),pw)}catch(err){
   loginErr=({'auth/invalid-credential':'Wrong email or password.','auth/too-many-requests':'Too many attempts. Wait a few minutes and try again.','auth/network-request-failed':'No internet connection.'})[err.code]||'Could not sign in ('+(err.code||'error')+').'}
  loginBusy=false;render()});
 app.addEventListener('click',async e=>{if(e.target.id!=='forgot')return;const em=($('#em')||{}).value;loginEmail=em||'';if(!em){loginErr='Type your email first, then tap Forgot password.';render();return}
@@ -1087,7 +1220,7 @@ try{
  if(!firebaseConfig||!firebaseConfig.apiKey||String(firebaseConfig.apiKey).startsWith('PASTE'))throw new Error('config');
  const fa=initializeApp(firebaseConfig);auth=getAuth(fa);fsdb=getFirestore(fa);
  db={doc:p=>({set:d=>setDoc(doc(fsdb,p),d),delete:()=>deleteDoc(doc(fsdb,p))})};
- onAuthStateChanged(auth,u=>{authUser=u||null;canWrite=u?null:false;if(!u)cur=null;if(u)migrateLegacy();if(u&&R.v==='signin'){location.hash='#';return}listen();render()});
+ onAuthStateChanged(auth,u=>{authUser=u||null;canWrite=u?null:false;if(!u)cur=null;watchMember();if(u)migrateLegacy();if(u&&R.v==='signin'){location.hash='#';return}listen();render()});
  listen();
 }catch(e){authUser=null;loaded=true;loadNote=e.message==='config'?'Setup needed: paste your Firebase settings into config.js (see README).':'Could not start: '+e.message;render()}
 }

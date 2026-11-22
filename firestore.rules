@@ -2,22 +2,60 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Scorer allowlist: only these signed-in emails can save or delete scores.
-    // Use lowercase emails. Add or remove scorers here, then click Publish.
-    function isScorer() {
-      return request.auth != null
-        && request.auth.token.email in [
-          'moorkkannoor@gmail.com'
-        ];
+    // TENVOX ShuttleBook security rules
+    // Admin: full control. People send an access request; the admin creates a
+    // username + password for them and assigns tournaments / matches to that ID.
+    // Organiser IDs can also create their own events. Scorer IDs control only what is assigned.
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email in ['moorkkannoor@gmail.com'];
+    }
+    function memberPath() { return /databases/$(database)/documents/members/$(request.auth.uid); }
+    function member() { return get(memberPath()).data; }
+    function active() { return signedIn() && exists(memberPath()) && member().status == 'approved'; }
+    function organiser() { return active() && member().role == 'organiser'; }
+    function assigned(id) { return active() && id is string && id in member().assigned; }
+    function notEvent(d) { return d.get('kind', '') != 'event'; }
+
+    // Access requests: anyone may send one; only the admin reads or decides
+    match /requests/{reqId} {
+      allow create: if request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(['id', 'name', 'phone', 'email', 'city', 'club', 'heard', 'ref', 'refPhone', 'want', 'consentAt', 'status', 'at'])
+        && request.resource.data.consentAt is number
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.phone is string && request.resource.data.phone.size() <= 16;
+      allow read, update, delete: if isAdmin();
     }
 
-    match /matches/{matchId} {
-      allow read: if true;          // everyone can watch live scores, no login
-      allow write: if isScorer();   // only listed scorers can score
+    // Member IDs: written only by the admin; each member can read their own
+    match /members/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    match /matches/{docId} {
+      allow read: if true;   // everyone can watch live scores, no login
+      allow create: if isAdmin()
+        || (organiser() && request.resource.data.owner == request.auth.uid)
+        || (notEvent(request.resource.data) && assigned(request.resource.data.ev));
+      allow update: if isAdmin()
+        || (organiser() && resource.data.owner == request.auth.uid
+            && request.resource.data.owner == request.auth.uid)
+        // the assigned tournament or individual match itself (edit / score)
+        || (assigned(docId)
+            && request.resource.data.get('owner', '') == resource.data.get('owner', '')
+            && request.resource.data.get('kind', '') == resource.data.get('kind', ''))
+        // ties inside an assigned tournament
+        || (notEvent(resource.data) && assigned(resource.data.ev)
+            && request.resource.data.ev == resource.data.ev);
+      allow delete: if isAdmin()
+        || (organiser() && resource.data.owner == request.auth.uid)
+        || (notEvent(resource.data) && assigned(resource.data.ev));
     }
 
     match /{document=**} {
-      allow read, write: if false;  // nothing else is open
+      allow read, write: if false;   // nothing else is open
     }
   }
 }
