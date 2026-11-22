@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rajyotsava Cup Live Score</title>
 <meta name="description" content="Live scores of AURA Rajyotsava Cup 2026 badminton">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d1f19">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Rajyotsava Live">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -103,6 +108,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 
 /* ===== live view ===== */
+.pin{display:grid;gap:8px}.pin #pinBtn{min-height:48px;background:var(--gold);color:var(--goldink);font-size:16px;border-radius:12px}
+.pin-help{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;line-height:1.5}.sharei{display:inline-block;transform:rotate(-90deg)}
+@media(display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}}
+
 .lv-hero{background:#0d1f19;color:#fff;border-radius:18px;padding:14px;margin:0 0 4px}
 .lv-hero .muted{color:#a9c7bb}.lv-hero .pill:not(.onair){background:#24352e;color:#e9f3ee}
 .lv-h{margin:0 0 10px;font-size:26px;line-height:1.05}
@@ -455,10 +464,19 @@ function latestCard(){const done=matches.filter(m=>m.status==='done').sort((a,b)
  return `<article class="lv-card"><div class="lv-meta"><span class="pill">LATEST RESULT</span><span>${esc(m.type)} · Tie ${m.tie} · ${tieOf(m).c}</span></div>
  <div class="lv-main"><div class="lv-t"><img alt="" src="${LOGO[A.k]}"><div><b>${esc(A.n)}</b></div></div><div class="lv-num num"><span>${m.sA}</span><i>:</i><span>${m.sB}</span></div><div class="lv-t r"><img alt="" src="${LOGO[B.k]}"><div><b>${esc(B.n)}</b></div></div></div>
  <div class="lv-srv">🏆 ${esc(w.n)} won the tie · Encounter ${esc(A.n)} ${e.pts[m.teamA]||0} – ${e.pts[m.teamB]||0} ${esc(B.n)}</div></article>`}
+let installEvt=null,pinOpen=false;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(route()==='watch')render()});
+addEventListener('appinstalled',()=>{installEvt=null;toast('Added to your home screen');render()});
+try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+function pinBar(){if(standalone())return '';
+ return `<div class="pin"><button id="pinBtn">📌 Pin live scores to home screen</button>${pinOpen?`<div class="pin-help">${isIOS()?'On iPhone: tap the <b>Share</b> button <span class="sharei">⎋</span> at the bottom of Safari → scroll down → <b>Add to Home Screen</b> → <b>Add</b>.':'In Chrome: tap the <b>⋮</b> menu (top right) → <b>Add to Home screen</b> (or <b>Install app</b>) → <b>Add</b>.'}<br>The <b>Rajyotsava Live</b> icon then opens the live scores full-screen.</div>`:''}</div>`}
 function watchView(){const live=matches.filter(m=>m.status==='live').sort((a,b)=>String(a.court).localeCompare(String(b.court)));
  const focus=live.find(m=>m.id===watchId)||live[0];
  return `<div class="stack">${loadNote?`<div class="note err">${esc(loadNote)}</div>`:''}
  ${!loaded&&!loadNote?'<p class="muted">Connecting to live scores…</p>':''}
+ ${pinBar()}
  ${focus?`<section class="lv-hero"><h2 class="lv-h">Live now${live.length>1?` · ${live.length} courts`:''}</h2>
   <div class="lv-grid"><div class="stack">${liveCard(focus,true)}${live.filter(m=>m!==focus).map(m=>liveCard(m,false)).join('')}</div>
   <details class="lv-courtbox" ${matchMedia('(min-width:861px)').matches?'open':''}><summary>Court view · ${esc(focus.court)}</summary>${courtView(focus,false)}</details></div></section>`
@@ -529,6 +547,7 @@ app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[da
  else if(b.id==='finish'||b.id==='finish2'){cur.winner=winnerOf(cur);cur.status='done';save(cur);toast('Result saved');render()}
  else if(d.fp){const side=$('#fpSide').value,who=$('#fpWho').value;cur.fp=cur.fp.concat([{id:Date.now().toString(36),side,who,kind:d.fp,pts:FP[d.fp].p,at:cur.sA+'–'+cur.sB}]);save(cur);render()}
  else if(d.fpdel){cur.fp=cur.fp.filter(f=>f.id!==d.fpdel);save(cur);render()}
+ else if(b.id==='pinBtn'){if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()})}else{pinOpen=!pinOpen;render()}}
  else if(b.id==='msMenu'){sheet='menu';render()}else if(b.id==='msClose'||b.id==='msClose2'){sheet='';confirmDel=false;render()}else if(b.id==='msFp'){sheet='fp';render()}
  else if(b.id==='back'){cur=null;sheet='';lastMsg='';confirmDel=false;showInterval=false;render()}
  else if(b.id==='del'){if(!confirmDel){confirmDel=true;render();setTimeout(()=>{if(confirmDel){confirmDel=false;render()}},4000)}else{const id=cur.id;cur=null;confirmDel=false;db.doc('matches/'+id).delete().catch(()=>toast('Could not delete'));render()}}
