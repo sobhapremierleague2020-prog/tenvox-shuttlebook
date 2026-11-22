@@ -100,6 +100,87 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .mini .num{font-size:36px;font-weight:800;text-align:right}
 .enc{display:flex;justify-content:space-between;gap:8px;align-items:center}
 
+
+
+/* ===== live view ===== */
+.lv-hero{background:#0d1f19;color:#fff;border-radius:18px;padding:14px;margin:0 0 4px}
+.lv-hero .muted{color:#a9c7bb}
+.lv-h{margin:0 0 10px;font-size:26px;line-height:1.05}
+.lv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:14px;align-items:start}
+.lv-card{background:#13211c;border:1px solid #24352e;border-radius:16px;padding:12px;display:grid;gap:8px}
+.lv-card[data-watch]{cursor:pointer}.lv-card[data-watch]:hover{border-color:var(--gold)}
+.lv-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#cfe3da}
+.lv-main{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px}
+.lv-t{display:flex;align-items:center;gap:8px}.lv-t.r{flex-direction:row-reverse;text-align:right}
+.lv-t img{width:40px;height:48px;object-fit:cover;border-radius:8px;flex:none}
+.lv-t b{display:block;font:700 18px/1.05 "Barlow Condensed",sans-serif}.lv-t span{font-size:12px;color:#a9c7bb}
+.lv-num{font:800 clamp(46px,11vw,84px)/1 "Barlow Condensed",sans-serif;display:flex;gap:8px;align-items:center}
+.lv-card:not(.big) .lv-num{font-size:44px}
+.lv-num i{font-style:normal;color:#5f8274;font-size:.55em}
+.lv-num.sa span:first-child,.lv-num.sb span:last-child{color:var(--gold)}
+.lv-flag{text-align:center;font:800 18px "Barlow Condensed",sans-serif;letter-spacing:.06em;color:#fff;background:#2a1414;border:1px solid #6b2a20;border-radius:10px;padding:4px}
+.lv-flag.g{color:var(--goldink);background:var(--gold);border-color:var(--gold)}
+.lv-srv{text-align:center;font-size:14px;color:var(--gold);font-weight:600}
+.lv-enc{display:grid;gap:6px;font-size:14px;color:#dfeee7;border-top:1px solid #24352e;padding-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;border:1px solid #2c4a3e;color:#cfe3da;white-space:nowrap}
+.chip.on{background:var(--red);border-color:var(--red);color:#fff}
+.lv-courtbox{background:#13211c;border:1px solid #24352e;border-radius:16px;padding:10px}
+.lv-courtbox summary{cursor:pointer;font-weight:700;color:#cfe3da;min-height:32px}
+.lv-courtbox .court{max-height:60vh;max-width:280px}
+.lv-pl{display:none;text-align:center;font-size:13px;color:#a9c7bb}.lv-pl i{color:#6f8f82}
+td.n{white-space:nowrap}
+em.nf,em.ns{font-style:normal}em.ns{display:none}
+@media(max-width:600px){.lv-t img,.lv-t>div>span{display:none}em.nf{display:none}em.ns{display:inline}.lv-pl{display:block}.lv-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lv-t>div{min-width:0;overflow:hidden}.lv-num{font-size:46px;gap:4px}.lv-main{gap:10px}.lv-flag{font-size:15px}}
+@media(max-width:860px){.lv-grid{grid-template-columns:minmax(0,1fr)}.lv-courtbox .court{max-height:50vh;max-width:240px}.lv-h{font-size:22px}.lv-t img{width:32px;height:38px}.lv-t b{font-size:16px}}
+
+/* ===== full-screen phone scoring ===== */
+body.mscore{overflow:hidden}body.mscore header{display:none}body.mscore main{padding:0}
+.ms{position:fixed;inset:0;height:100dvh;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto;background:#0b1712;color:#fff;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);z-index:6;-webkit-user-select:none;user-select:none}
+.ms-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;font-size:14px;color:#cfe3da}
+.ms-top button{min-height:44px;min-width:52px;font-size:26px;line-height:1;background:#1c2c25;color:#fff;border-radius:12px;padding:0 10px}
+.ms-board{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;gap:6px;padding:0 10px}
+.ms-team{background:#13211c;border-radius:14px;padding:8px 10px;text-align:center;border-top:5px solid var(--c)}
+.ms-team.srvside{box-shadow:inset 0 0 0 2px var(--gold)}
+.ms-tn{font:700 16px/1.1 "Barlow Condensed",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-pl{font-size:12px;color:#a9c7bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-sc{font:800 clamp(44px,13vw,64px)/1 "Barlow Condensed",sans-serif;margin-top:2px}
+.ms-srv{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.04em}.ms-srv.off{visibility:hidden}
+.ms-vs{display:flex;align-items:center;justify-content:center;font:800 14px "Barlow Condensed",sans-serif;color:#6f8f82;max-width:70px;text-align:center}
+.ms-vs .g{color:var(--gold)}
+.ms-iv{margin:6px 10px 0;background:#2c2510;border:1px solid #5a4a1c;border-radius:12px;padding:6px 10px;font-size:14px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ms-iv button{min-height:36px;padding:0 12px;background:var(--gold);color:var(--goldink)}.ms-iv #ivNo{background:#24352e;color:#fff}
+.ms-line{text-align:center;font-size:13px;color:var(--gold);padding:6px 10px 0;font-weight:600}
+.ms-court{min-height:0;overflow:hidden;display:flex;justify-content:center;align-items:center;padding:6px 10px}
+.ms-court .court{height:100%;width:auto;max-width:100%;max-height:100%;margin:0;aspect-ratio:610/1340}
+.ms-court .box .nm{font-size:clamp(14px,3.8vw,20px)}
+.ms-act{padding:6px 10px 10px;display:grid;gap:10px;background:#0d1f19;border-top:1px solid #1f3129}
+.ms-last{text-align:center;font-size:14px;color:#cfe3da;min-height:20px}
+.ms-pads{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ms-plus{min-height:clamp(96px,16vh,140px);border-radius:18px;background:var(--c);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.ms-plus b{font:800 44px/1 "Barlow Condensed",sans-serif}.ms-plus span{font:700 14px Barlow,sans-serif;max-width:100%;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-plus:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35);filter:brightness(1.1)}
+.ms-sec{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.ms-sec button,.ms-wide{min-height:52px;background:#24352e;color:#fff;border-radius:14px;font-size:16px}
+.ms-sec .ms-undo{background:#3a2f12;color:#ffd77a}
+.ms-confirm{min-height:110px;background:var(--gold);color:var(--goldink);border-radius:18px;font-size:22px;line-height:1.2}.ms-confirm small{font-size:15px;font-weight:600}
+.ms-wide.ms-undo{background:#3a2f12;color:#ffd77a}
+.ms-done{text-align:center;font:700 18px "Barlow Condensed",sans-serif;color:var(--gold);padding:8px}
+.ms-ask{text-align:center;font:800 20px "Barlow Condensed",sans-serif;color:var(--gold)}
+.ms-srvgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ms-srvteam{display:grid;gap:8px;border-top:4px solid var(--c);background:#13211c;border-radius:12px;padding:8px}
+.ms-srvteam>span{font:700 14px Barlow,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-srvteam button{min-height:50px;background:var(--c);color:#fff;font-size:17px;border-radius:12px}
+.ms-srvteam .ms-swapside{min-height:38px;background:#24352e;font-size:13px}
+.ms-sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:8}
+.ms-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--panel);color:var(--ink);border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:85dvh;overflow:auto;-webkit-user-select:text;user-select:text}
+.ms-item{display:block;width:100%;text-align:left;min-height:54px;margin-bottom:8px;background:var(--line);font-size:17px;border-radius:12px;padding:0 16px}
+.ms-item.danger{background:#fde8e6;color:#9b1c12}
+.fpbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fpbtns button{min-height:52px}
+.fp-good{background:#2f9e4f;color:#fff}.fp-yellow{background:var(--gold);color:var(--goldink)}.fp-red{background:var(--red);color:#fff}
+@media(max-height:700px){.ms-court{display:none}.ms{grid-template-rows:auto auto auto auto 1fr}.ms-act{align-content:end}.ms-plus{min-height:110px}.ms-line{font-size:15px;padding:10px}}
+@media(max-height:560px){.ms-plus{min-height:84px}.ms-sc{font-size:40px}.ms-sec button{min-height:46px}.ms-srvteam button{min-height:42px}}
+
 /* mobile scorer */
 button{touch-action:manipulation}
 .fpbox summary{cursor:pointer;list-style:none}.fpbox summary::-webkit-details-marker{display:none}
@@ -159,7 +240,7 @@ const short=n=>n==='Muthunagarajan'?'Muthu':n.split(' ')[0];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $=s=>document.querySelector(s);
 const app=$('#app');
-let db=null,auth=null,authUser=undefined,loginErr='',loginEmail='',loginBusy=false,canWrite=null,matches=[],loaded=false,loadNote='',cur=null,watchId=null,confirmDel=false,fpOpen=false,intervalSeen={};
+let db=null,auth=null,authUser=undefined,loginErr='',loginEmail='',loginBusy=false,canWrite=null,matches=[],loaded=false,loadNote='',cur=null,watchId=null,confirmDel=false,fpOpen=false,intervalSeen={},sheet='',lastTap=0,lastMsg='';
 let setup={type:'League',court:'C1',a:'',b:'',tie:1,pa:['','',''],pb:['','',''],target:21,rule:'golden'};
 try{const s=JSON.parse(localStorage.getItem('rc-setup')||'null');if(s)Object.assign(setup,s,{pa:['','',''],pb:['','','']});cur=null}catch(e){}
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2600)}
@@ -174,7 +255,8 @@ function flagOf(m){if(m.status==='done'||winnerOf(m))return'';const t=m.target,a
  if(a===t-1&&b<t-1)return'GAME POINT · '+team(m.teamA).n.toUpperCase();
  if(b===t-1&&a<t-1)return'GAME POINT · '+team(m.teamB).n.toUpperCase();return''}
 function snap(m){return{sA:m.sA,sB:m.sB,serveTeam:m.serveTeam,server:m.server,posA:{...m.posA},posB:{...m.posB}}}
-function point(side){const m=cur;if(!m||m.status!=='live')return;if(!m.serveTeam){toast('Tap a player on the court to choose who serves first');return}
+function point(side){const m=cur;if(!m||m.status!=='live')return;if(!m.serveTeam){toast('Choose who serves first');return}
+ if(Date.now()-lastTap<600)return;lastTap=Date.now();
  if(winnerOf(m)){toast('Game is over — confirm the result or undo');return}
  m.hist=(m.hist||[]).concat([{...snap(m),last:side}]).slice(-300);
  const pos=side==='A'?m.posA:m.posB;
@@ -183,12 +265,12 @@ function point(side){const m=cur;if(!m||m.status!=='live')return;if(!m.serveTeam
  else{m.serveTeam=side;const sc=side==='A'?m.sA:m.sB;m.server=sc%2===0?pos.R:pos.L}
  const half=Math.ceil(m.target/2);
  if(Math.max(m.sA,m.sB)===half&&!m.intervalDone){m.intervalDone=true;showInterval=true}
- save(m);render()}
+ lastMsg='Point to '+team(side==='A'?m.teamA:m.teamB).n+' · '+m.sA+'–'+m.sB;save(m);render()}
 let showInterval=false;
 function undo(side){const m=cur;if(!m||!(m.hist||[]).length){toast('Nothing to undo');return}
  const h=m.hist[m.hist.length-1];
  if(side&&h.last!==side){toast('Last point went to '+team(h.last==='A'?m.teamA:m.teamB).n+' — use its − first');return}
- m.hist=m.hist.slice(0,-1);Object.assign(m,{sA:h.sA,sB:h.sB,serveTeam:h.serveTeam,server:h.server,posA:h.posA,posB:h.posB});
+ m.hist=m.hist.slice(0,-1);Object.assign(m,{sA:h.sA,sB:h.sB,serveTeam:h.serveTeam,server:h.server,posA:h.posA,posB:h.posB});lastMsg='Undone · back to '+h.sA+'–'+h.sB;
  if(m.status==='done'){m.status='live';m.winner=null}
  save(m);render()}
 function setServer(side,name){const m=cur;if(m.sA||m.sB)return;const pos=side==='A'?m.posA:m.posB;
@@ -335,15 +417,35 @@ function resultsBlock(compact){const enc=encounters();
  <div class="card"><h2 style="margin:0 0 6px">Fair Play standings</h2><table><thead><tr><th>Team</th><th class="n">+</th><th class="n">−</th><th class="n">Points</th></tr></thead><tbody>
  ${fpRows.map(t=>`<tr><td><span class="teamopt"><img alt="" src="${LOGO[t.k]}" style="width:24px;height:28px;object-fit:cover;border-radius:4px">${esc(t.n)}</span></td><td class="n">${fp[t.k].good}</td><td class="n">${fp[t.k].bad}</td><td class="n"><b>${fp[t.k].pts>0?'+':''}${fp[t.k].pts}</b></td></tr>`).join('')}</tbody></table>
  <p class="muted" style="margin:8px 0 0">Good sportsmanship +1 · Warning −1 · Yellow card −2 · Red card −5. Highest total wins the Fair Play award.</p></div></div>`}
-function watchView(){const live=matches.filter(m=>m.status==='live').sort((a,b)=>a.court.localeCompare(b.court));
+function encOf(m){const key=encKey(m);const ties=matches.filter(x=>encKey(x)===key&&(x.status==='done'||x.status==='live')).sort((x,y)=>x.tie-y.tie);
+ const pts={[m.teamA]:0,[m.teamB]:0};for(const x of ties)if(x.status==='done'&&x.winner){const w=x.winner==='A'?x.teamA:x.teamB;pts[w]=(pts[w]||0)+10}return{ties,pts}}
+function liveCard(m,big){const A=team(m.teamA),B=team(m.teamB),t=tieOf(m),f=flagOf(m),e=encOf(m);
+ const side=s=>{const T=s==='A'?A:B,P=s==='A'?m.playersA:m.playersB;return `<div class="lv-t ${s==='B'?'r':''}"><img alt="" src="${LOGO[T.k]}"><div><b><em class="nf">${esc(T.n)}</em><em class="ns">${esc(T.n.split(' ')[0])}</em></b><span>${P.map(short).map(esc).join(' / ')||'Team'}</span></div></div>`};
+ const chips=TIES.map(tt=>{const x=e.ties.find(y=>y.tie===tt.n);if(!x)return `<span class="chip">T${tt.n}</span>`;
+  if(x.status==='live')return `<span class="chip on">T${tt.n} LIVE</span>`;const w=x.winner==='A'?x.teamA:x.teamB;const sc=x.teamA===m.teamA?x.sA+'–'+x.sB:x.sB+'–'+x.sA;
+  return `<span class="chip" style="border-color:${team(w).c};background:${team(w).c}26" title="${esc(team(w).n)} won">T${tt.n} ${sc}</span>`}).join('');
+ return `<article class="lv-card ${big?'big':''}" ${big?'':`data-watch="${m.id}" role="button" tabindex="0"`}>
+ <div class="lv-meta"><span class="pill onair">● LIVE</span><span>${esc(m.court)} · ${esc(m.type)} · Tie ${m.tie} · <b>${t.c}</b> · to ${m.target}</span></div>
+ <div class="lv-main">${side('A')}<div class="lv-num num ${m.serveTeam==='A'?'sa':''} ${m.serveTeam==='B'?'sb':''}"><span>${m.sA}</span><i>:</i><span>${m.sB}</span></div>${side('B')}</div>
+ <div class="lv-pl">${m.playersA.map(short).map(esc).join(' / ')||esc(A.n)} <i>vs</i> ${m.playersB.map(short).map(esc).join(' / ')||esc(B.n)}</div>
+ ${f?`<div class="lv-flag ${f.startsWith('GOLDEN')?'g':''}">${esc(f)}</div>`:''}
+ ${m.serveTeam?`<div class="lv-srv">${srvLine(m)}</div>`:'<div class="lv-srv muted">Warming up — waiting for first serve</div>'}
+ <div class="lv-enc"><span>Encounter: <b>${esc(A.n)} ${e.pts[m.teamA]||0}</b> – <b>${e.pts[m.teamB]||0} ${esc(B.n)}</b></span><div class="chips">${chips}</div></div>
+ </article>`}
+function latestCard(){const done=matches.filter(m=>m.status==='done').sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(!done.length)return '';
+ const m=done[0],e=encOf(m),A=team(m.teamA),B=team(m.teamB),w=team(m.winner==='A'?m.teamA:m.teamB);
+ return `<article class="lv-card"><div class="lv-meta"><span class="pill">LATEST RESULT</span><span>${esc(m.type)} · Tie ${m.tie} · ${tieOf(m).c}</span></div>
+ <div class="lv-main"><div class="lv-t"><img alt="" src="${LOGO[A.k]}"><div><b>${esc(A.n)}</b></div></div><div class="lv-num num"><span>${m.sA}</span><i>:</i><span>${m.sB}</span></div><div class="lv-t r"><img alt="" src="${LOGO[B.k]}"><div><b>${esc(B.n)}</b></div></div></div>
+ <div class="lv-srv">🏆 ${esc(w.n)} won the tie · Encounter ${esc(A.n)} ${e.pts[m.teamA]||0} – ${e.pts[m.teamB]||0} ${esc(B.n)}</div></article>`}
+function watchView(){const live=matches.filter(m=>m.status==='live').sort((a,b)=>String(a.court).localeCompare(String(b.court)));
  const focus=live.find(m=>m.id===watchId)||live[0];
  return `<div class="stack">${loadNote?`<div class="note err">${esc(loadNote)}</div>`:''}
  ${!loaded&&!loadNote?'<p class="muted">Connecting to live scores…</p>':''}
- ${focus?`<div class="live"><div>${scoreStrip(focus)}${courtView(focus,false)}</div><div class="stack">
-  <div class="card"><span class="pill onair">LIVE</span> <b>${esc(focus.type)}</b> · ${esc(focus.court)} · Tie ${focus.tie} · ${tieOf(focus).c}<br><span class="muted">First to ${focus.target}${focus.rule==='golden'?', golden point at '+(focus.target-1)+'–'+(focus.target-1):', win by 2'}</span></div>
-  ${live.length>1?`<h3 style="margin:4px 0 0">Other courts</h3>${live.filter(m=>m!==focus).map(m=>`<div class="card wcard" data-watch="${m.id}" role="button" tabindex="0"><div class="muted">${esc(m.court)} · Tie ${m.tie} · ${tieOf(m).c}</div><div class="mini"><b>${esc(team(m.teamA).n)}</b><span class="num">${m.sA}</span><b>${esc(team(m.teamB).n)}</b><span class="num">${m.sB}</span></div></div>`).join('')}`:''}
- </div></div>`:loaded?'<div class="card"><h2 style="margin:0">No tie in play right now</h2><p class="muted" style="margin:6px 0 0">Scores appear here the moment the umpire starts a match.</p></div>':''}
- ${resultsBlock(false)}</div>`}
+ ${focus?`<section class="lv-hero"><h2 class="lv-h">Live now${live.length>1?` · ${live.length} courts`:''}</h2>
+  <div class="lv-grid"><div class="stack">${liveCard(focus,true)}${live.filter(m=>m!==focus).map(m=>liveCard(m,false)).join('')}</div>
+  <details class="lv-courtbox" ${matchMedia('(min-width:861px)').matches?'open':''}><summary>Court view · ${esc(focus.court)}</summary>${courtView(focus,false)}</details></div></section>`
+ :loaded?`<section class="lv-hero"><h2 class="lv-h">No tie in play right now</h2><p class="muted" style="margin:0 0 10px">Scores appear here the moment the umpire starts a match.</p>${latestCard()}</section>`:''}
+  ${resultsBlock(false)}</div>`}
 /* ---------- login ---------- */
 function loginView(){return `<div class="card stack" style="max-width:420px;margin:24px auto">
  <h2 style="margin:0">Scorer sign in</h2><p class="muted" style="margin:0">Only tournament scorers need to sign in. Spectators can open <a href="#watch" style="color:inherit;font-weight:700">Live view</a> without an account.</p>
@@ -352,6 +454,33 @@ function loginView(){return `<div class="card stack" style="max-width:420px;marg
  ${loginErr?`<div class="note err">${esc(loginErr)}</div>`:''}
  <button class="btn-gold btn-big" type="submit" ${loginBusy?'disabled':''}>${loginBusy?'Signing in…':'Sign in'}</button>
  <button type="button" id="forgot" style="background:transparent;text-decoration:underline;font-weight:600">Forgot password?</button></form></div>`}
+function srvLine(m){if(!m.serveTeam||m.status!=='live')return '';const sc=m.serveTeam==='A'?m.sA:m.sB,box=sc%2===0?'R':'L';
+ const rs=m.serveTeam==='A'?'B':'A',rp=(rs==='A'?m.posA:m.posB)||{};const recv=rp[box];
+ return `● ${esc(short(m.server||''))} serving${recv?' → '+esc(short(recv))+' receiving':''} · ${box==='R'?'right':'left'} court`}
+/* ---------- mobile scoring mode ---------- */
+const isPhone=()=>matchMedia('(max-width:860px)').matches;
+function fpPanel(m){const A=team(m.teamA),B=team(m.teamB);
+ return `<div class="grid2"><div><label for="fpSide">Team</label><select id="fpSide"><option value="A">${esc(A.n)}</option><option value="B">${esc(B.n)}</option></select></div>
+ <div><label for="fpWho">Player</label><select id="fpWho"><option value="">Whole team</option></select></div></div>
+ <div class="fpbtns">${Object.entries(FP).map(([k,v])=>`<button data-fp="${k}" class="fp-${k}">${v.t} ${v.p>0?'+':''}${v.p}</button>`).join('')}</div>
+ ${m.fp.length?`<ul class="fp-list">${m.fp.slice().reverse().map(f=>`<li><span><b>${f.pts>0?'+':''}${f.pts}</b> ${esc(FP[f.kind].t)} · ${esc(team(f.side==='A'?m.teamA:m.teamB).n)}${f.who?' · '+esc(f.who):''} <span class="muted">(${f.at})</span></span><button data-fpdel="${f.id}">Remove</button></li>`).join('')}</ul>`:'<p class="muted" style="margin:0">No fair play entries for this tie yet.</p>'}`}
+function mobileLiveView(){const m=cur,t=tieOf(m),A=team(m.teamA),B=team(m.teamB),w=winnerOf(m);
+ const order=m.swapped?['B','A']:['A','B'];const T=s=>s==='A'?A:B,S=s=>s==='A'?m.sA:m.sB,P=s=>s==='A'?m.playersA:m.playersB;
+ const f=flagOf(m);
+ const scoreCol=s=>`<div class="ms-team ${m.serveTeam===s?'srvside':''}" style="--c:${T(s).c}"><div class="ms-tn">${esc(T(s).n)}</div><div class="ms-pl">${P(s).map(short).map(esc).join(' / ')||'&nbsp;'}</div><div class="ms-sc num">${S(s)}</div>${m.serveTeam===s?'<div class="ms-srv">● SERVING</div>':'<div class="ms-srv off">&nbsp;</div>'}</div>`;
+ let actions='';
+ if(m.status!=='live'){actions=`<div class="ms-done">Result saved · ${esc(team(m.winner==='A'?m.teamA:m.teamB).n)} won ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</div><button class="ms-wide" id="back">← Back to tie list</button>`}
+ else if(!m.serveTeam){actions=`<div class="ms-ask">Who serves first?</div><div class="ms-srvgrid">${order.map(s=>`<div class="ms-srvteam" style="--c:${T(s).c}"><span>${esc(T(s).n)}</span>${P(s).map(n=>`<button data-srv="${s}|${esc(n)}">${esc(short(n))}</button>`).join('')}<button class="ms-swapside" data-swap="${s}">⇄ Swap sides</button></div>`).join('')}</div>`}
+ else if(w){actions=`<button class="ms-confirm" id="finish2">✔ Confirm result<br><small>${esc(team(w==='A'?m.teamA:m.teamB).n)} win ${Math.max(m.sA,m.sB)}–${Math.min(m.sA,m.sB)}</small></button><button class="ms-wide ms-undo" id="undo2">↶ Undo last point</button>`}
+ else{actions=`<div class="ms-last">${esc(lastMsg||'Tap the team that won the rally')}</div>
+  <div class="ms-pads">${order.map(s=>`<button class="ms-plus" data-pt="${s}" style="--c:${T(s).c}" aria-label="Point to ${esc(T(s).n)}"><b>+1</b><span>${esc(T(s).n)}</span></button>`).join('')}</div>
+  <div class="ms-sec"><button id="undo3" class="ms-undo" ${(m.hist||[]).length?'':'disabled'}>↶ Undo last point</button><button id="swap3">⇆ Change ends</button></div>`}
+ const ivl=showInterval&&m.status==='live'?`<div class="ms-iv">Interval at ${Math.ceil(m.target/2)} — change ends? <button id="ivYes">Change</button><button id="ivNo">Later</button></div>`:'';
+ const sh=sheet?`<div class="ms-sheet-bg" id="msClose"></div><div class="ms-sheet">${sheet==='fp'?`<div class="enc"><h3 style="margin:0">Fair play</h3><button id="msClose2">Done</button></div><div class="stack" style="margin-top:12px">${fpPanel(m)}</div>`:
+  `<h3 style="margin:0 0 10px">Tie options</h3><button class="ms-item" id="msFp">🤝 Fair play / violations</button><button class="ms-item" id="swap3">⇆ Change ends</button><button class="ms-item" id="back">← Back to tie list</button><button class="ms-item danger" id="del">${confirmDel?'Tap again to delete this tie':'🗑 Delete this tie'}</button><button class="ms-item" id="msClose2">Close</button>`}</div>`:'';
+ return `<div class="ms"><div class="ms-top"><span><span class="pill onair">LIVE</span> Tie ${m.tie} · ${t.c} · ${esc(m.court)} · to ${m.target}</span><button id="msMenu" aria-label="Tie options">⋯</button></div>
+ <div class="ms-board">${scoreCol(order[0])}<div class="ms-vs">${f?`<span class="${f.startsWith('GOLDEN')?'g':''}">${esc(f)}</span>`:w?'<span class="g">GAME</span>':'vs'}</div>${scoreCol(order[1])}</div>
+ ${m.serveTeam&&m.status==='live'?`<div class="ms-line">${srvLine(m)}</div>`:''}${ivl}<div class="ms-court">${courtView(m,false)}</div><div class="ms-act">${actions}</div>${sh}</div>`}
 /* ---------- render + events ---------- */
 function buzz(){try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}}
 let wake=null;async function keepAwake(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
@@ -360,23 +489,25 @@ app.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.cont
 function route(){return location.hash==='#watch'?'watch':'score'}
 function render(){const r=route();$('#tScore').className=r==='score'?'on':'';$('#tWatch').className=r==='watch'?'on':'';
  const fs=$('#fpSide')?.value,fw=$('#fpWho')?.value;
- $('#signout').hidden=!authUser;document.body.classList.toggle('scoring',!!(cur&&r==='score'&&authUser));keepAwake(!!(cur&&r==='score'&&cur.status==='live'));app.innerHTML=r==='watch'?watchView():authUser===undefined?'<p class="muted">Checking sign-in…</p>':!authUser?loginView():cur?liveView():setupView();
+ $('#signout').hidden=!authUser;document.body.classList.toggle('scoring',!!(cur&&r==='score'&&authUser));keepAwake(!!(cur&&r==='score'&&cur.status==='live'));const mob=!!(cur&&r==='score'&&authUser&&isPhone());document.body.classList.toggle('mscore',mob);
+ app.innerHTML=r==='watch'?watchView():authUser===undefined?'<p class="muted">Checking sign-in…</p>':!authUser?loginView():cur?(mob?mobileLiveView():liveView()):setupView();
  if(cur&&r==='score'){const s=$('#fpSide');if(s){if(fs)s.value=fs;fillWho();if(fw)$('#fpWho').value=fw}}}
 function fillWho(){const s=$('#fpSide').value,ps=s==='A'?cur.playersA:cur.playersB;$('#fpWho').innerHTML='<option value="">Whole team</option>'+ps.map(p=>`<option>${esc(p)}</option>`).join('')}
-app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[data-watch]');if(!b)return;const d=b.dataset;
+app.addEventListener('click',e=>{const b=e.target.closest('button,[data-srv],[data-watch],#msClose');if(!b)return;const d=b.dataset;
  if(d.type){setup.type=d.type;render()}else if(d.tie){setup.tie=+d.tie;setup.pa=['','',''];setup.pb=['','',''];render()}
  else if(d.target){setup.target=+d.target;render()}else if(d.rule){setup.rule=d.rule;render()}
  else if(b.id==='start')startMatch();
- else if(d.resume){cur=JSON.parse(JSON.stringify(matches.find(m=>m.id===d.resume)));confirmDel=false;render()}
+ else if(d.resume){cur=JSON.parse(JSON.stringify(matches.find(m=>m.id===d.resume)));confirmDel=false;lastMsg='';sheet='';render()}
  else if(d.srv){const[s,n]=d.srv.split('|');setServer(s,n)}
  else if(d.swap)swapSide(d.swap);
- else if(d.pt){point(d.pt);buzz()}else if(d.minus)undo(d.minus);else if(b.id==='undo'||b.id==='undo2'||b.id==='undo3')undo();else if(b.id==='swap3'){cur.swapped=!cur.swapped;save(cur);render()}
+ else if(d.pt){point(d.pt);buzz()}else if(d.minus)undo(d.minus);else if(b.id==='undo'||b.id==='undo2'||b.id==='undo3')undo();else if(b.id==='swap3'){cur.swapped=!cur.swapped;sheet='';lastMsg='Ends changed';save(cur);render()}
  else if(b.id==='swapCourt'||b.id==='ivYes'){cur.swapped=!cur.swapped;showInterval=false;save(cur);render()}
  else if(b.id==='ivNo'){showInterval=false;render()}
  else if(b.id==='finish'||b.id==='finish2'){cur.winner=winnerOf(cur);cur.status='done';save(cur);toast('Result saved');render()}
  else if(d.fp){const side=$('#fpSide').value,who=$('#fpWho').value;cur.fp=cur.fp.concat([{id:Date.now().toString(36),side,who,kind:d.fp,pts:FP[d.fp].p,at:cur.sA+'–'+cur.sB}]);save(cur);render()}
  else if(d.fpdel){cur.fp=cur.fp.filter(f=>f.id!==d.fpdel);save(cur);render()}
- else if(b.id==='back'){cur=null;confirmDel=false;showInterval=false;render()}
+ else if(b.id==='msMenu'){sheet='menu';render()}else if(b.id==='msClose'||b.id==='msClose2'){sheet='';confirmDel=false;render()}else if(b.id==='msFp'){sheet='fp';render()}
+ else if(b.id==='back'){cur=null;sheet='';lastMsg='';confirmDel=false;showInterval=false;render()}
  else if(b.id==='del'){if(!confirmDel){confirmDel=true;render();setTimeout(()=>{if(confirmDel){confirmDel=false;render()}},4000)}else{const id=cur.id;cur=null;confirmDel=false;db.doc('matches/'+id).delete().catch(()=>toast('Could not delete'));render()}}
  else if(d.watch){watchId=d.watch;render();scrollTo({top:0,behavior:'smooth'})}});
 app.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-srv],[data-watch]')){e.preventDefault();e.target.click()}});
@@ -385,7 +516,7 @@ app.addEventListener('change',e=>{const t=e.target;
  else if(t.id==='court')setup.court=t.value;
  else if(t.dataset.side){(t.dataset.side==='a'?setup.pa:setup.pb)[+t.dataset.i]=t.value;render()}
  else if(t.id==='fpSide')fillWho()});
-addEventListener('hashchange',render);
+addEventListener('hashchange',render);let rsz;addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(cur)render()},200)});
 render();
 /* ---------- Firebase ---------- */
 app.addEventListener('submit',async e=>{if(e.target.id!=='loginForm')return;e.preventDefault();loginEmail=$('#em').value.trim();const pw=$('#pw').value;loginBusy=true;loginErr='';render();
